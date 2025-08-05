@@ -1,0 +1,33 @@
+[default]
+# Application settings
+DEBUG = false
+SECRET_KEY = "your-secret-key-here-change-in-production"
+
+# Database
+DATABASE_URL = "sqlite+aiosqlite:///./speed_dating.db"
+DATABASE_ECHO = false
+
+# Server settings
+HOST = "127.0.0.1"
+PORT = 8000
+ALLOWED_ORIGINS = ["http://localhost:3000", "http://localhost:8000"]
+
+# QR Code settings
+qr_code_base_url = "http://localhost:8000"
+
+# PDF Badge settings
+pdf_badges_per_page = 35
+
+# Documentation settings
+docs_directory = "docs"
+auto_generate_docs = true
+
+[development]
+DEBUG = true
+DATABASE_ECHO = true
+ALLOWED_ORIGINS = ["*"]
+
+[production]
+DEBUG = false
+DATABASE_ECHO = false
+# Set proper production values in .secrets.toml

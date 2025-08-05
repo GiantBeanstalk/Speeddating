@@ -108,6 +108,37 @@ async def get_user_manager(user_db=Depends(get_user_db)):
     yield UserManager(user_db)
 
 
+async def get_current_user_websocket(token: str, session: AsyncSession) -> Optional[User]:
+    """
+    Authenticate user for WebSocket connections using JWT token.
+    
+    Args:
+        token: JWT token from WebSocket query parameter
+        session: Database session
+        
+    Returns:
+        User object if authentication successful, None otherwise
+    """
+    try:
+        # Use JWT authentication strategy to decode token
+        strategy = jwt_authentication.get_strategy()
+        user_id = await strategy.read_token(token, None)
+        
+        if user_id:
+            # Get user from database
+            user_db = SQLAlchemyUserDatabase(session, User, OAuthAccount)
+            user = await user_db.get(user_id)
+            
+            # Check if user is active
+            if user and user.is_active:
+                return user
+        
+        return None
+    except Exception as e:
+        print(f"WebSocket authentication error: {e}")
+        return None
+
+
 # Export authentication routers
 auth_router = fastapi_users.get_auth_router(auth_backend)
 register_router = fastapi_users.get_register_router()

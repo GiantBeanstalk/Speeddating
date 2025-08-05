@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Dating Timer Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .timer-container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .timer-display {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 20px 0;
+        }
+        
+        .timer-display.warning {
+            color: #e74c3c;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .status {
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin: 10px;
+            display: inline-block;
+        }
+        
+        .status.active {
+            background: #2ecc71;
+            color: white;
+        }
+        
+        .status.break {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .status.completed {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            transition: width 1s ease;
+        }
+        
+        .messages {
+            background: #ecf0f1;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .message {
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 3px;
+        }
+        
+        .message.info {
+            background: #d5e8ff;
+            border-left: 4px solid #3498db;
+        }
+        
+        .message.warning {
+            background: #ffeaa7;
+            border-left: 4px solid #fdcb6e;
+        }
+        
+        .message.announcement {
+            background: #a8e6cf;
+            border-left: 4px solid #00b894;
+        }
+        
+        .controls {
+            margin-top: 20px;
+        }
+        
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #2980b9;
+        }
+        
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+        
+        .connection-status.connected {
+            background: #2ecc71;
+            color: white;
+        }
+        
+        .connection-status.disconnected {
+            background: #e74c3c;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connectionStatus">Disconnected</div>
+    
+    <div class="timer-container">
+        <h1>Speed Dating Round Timer</h1>
+        
+        <div class="status" id="roundStatus">Waiting for connection...</div>
+        
+        <div class="timer-display" id="timerDisplay">--:--</div>
+        
+        <div id="roundInfo">
+            <p><strong>Round:</strong> <span id="roundNumber">-</span></p>
+            <p><strong>Phase:</strong> <span id="currentPhase">-</span></p>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        
+        <div class="controls">
+            <button onclick="connectToTimer()">Connect to Timer</button>
+            <button onclick="requestSync()">Sync Status</button>
+            <button onclick="clearMessages()">Clear Messages</button>
+        </div>
+    </div>
+    
+    <div class="timer-container">
+        <h1>Event Countdown</h1>
+        
+        <div class="status" id="countdownStatus">No countdown active</div>
+        
+        <div class="timer-display" id="countdownDisplay">--:--</div>
+        
+        <div id="countdownInfo">
+            <p><strong>Message:</strong> <span id="countdownMessage">-</span></p>
+            <p><strong>Target:</strong> <span id="countdownTarget">-</span></p>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="countdownProgressFill" style="width: 0%"></div>
+        </div>
+        
+        <div class="controls">
+            <button onclick="connectToEvent()">Connect to Event</button>
+            <button onclick="requestCountdownSync()">Sync Countdown</button>
+            <button onclick="clearMessages()">Clear Messages</button>
+        </div>
+    </div>
+    
+    <div class="messages" id="messages">
+        <div class="message info">Welcome! Enter a Round ID and JWT token to connect to a timer.</div>
+    </div>
+    
+    <div style="margin-top: 20px; padding: 20px; background: white; border-radius: 10px;">
+        <h3>Connection Settings</h3>
+        <div>
+            <label>Round ID: <input type="text" id="roundId" placeholder="Enter round UUID"></label>
+        </div>
+        <div style="margin-top: 10px;">
+            <label>Event ID: <input type="text" id="eventId" placeholder="Enter event UUID"></label>
+        </div>
+        <div style="margin-top: 10px;">
+            <label>JWT Token: <input type="password" id="jwtToken" placeholder="Enter your JWT token"></label>
+        </div>
+        <div style="margin-top: 10px;">
+            <button onclick="connectToTimer()">Connect to Timer</button>
+            <button onclick="connectToEvent()">Connect to Event</button>
+            <button onclick="disconnect()">Disconnect</button>
+        </div>
+    </div>
+
+    <script>
+        let socket = null;
+        let eventSocket = null;
+        let currentRoundId = null;
+        let currentEventId = null;
+        
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function updateConnectionStatus(connected) {
+            const status = document.getElementById('connectionStatus');
+            if (connected) {
+                status.textContent = 'Connected';
+                status.className = 'connection-status connected';
+            } else {
+                status.textContent = 'Disconnected';
+                status.className = 'connection-status disconnected';
+            }
+        }
+        
+        function addMessage(text, type = 'info') {
+            const messages = document.getElementById('messages');
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            message.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${text}`;
+            messages.appendChild(message);
+            messages.scrollTop = messages.scrollHeight;
+        }
+        
+        function updateTimerDisplay(data) {
+            const display = document.getElementById('timerDisplay');
+            const status = document.getElementById('roundStatus');
+            const phase = document.getElementById('currentPhase');
+            const progress = document.getElementById('progressFill');
+            
+            if (data.time_remaining !== undefined) {
+                display.textContent = formatTime(data.time_remaining);
+                
+                // Update progress bar
+                const percentage = data.percentage_complete || 0;
+                progress.style.width = `${Math.min(100, Math.max(0, percentage))}%`;
+                
+                // Warning styling for last minute
+                if (data.time_remaining <= 60) {
+                    display.classList.add('warning');
+                } else {
+                    display.classList.remove('warning');
+                }
+            }
+            
+            // Update status
+            if (data.phase) {
+                phase.textContent = data.phase;
+                status.textContent = data.phase === 'round' ? 'Round Active' : 'Break Time';
+                status.className = `status ${data.phase === 'break' ? 'break' : 'active'}`;
+            }
+        }
+        
+        function updateCountdownDisplay(data) {
+            const display = document.getElementById('countdownDisplay');
+            const status = document.getElementById('countdownStatus');
+            const message = document.getElementById('countdownMessage');
+            const target = document.getElementById('countdownTarget');
+            const progress = document.getElementById('countdownProgressFill');
+            
+            if (data.time_remaining !== undefined) {
+                display.textContent = formatTime(data.time_remaining);
+                
+                // Update progress bar
+                const percentage = data.percentage_complete || 0;
+                progress.style.width = `${Math.min(100, Math.max(0, percentage))}%`;
+                
+                // Warning styling for last minute
+                if (data.time_remaining <= 60) {
+                    display.classList.add('warning');
+                } else {
+                    display.classList.remove('warning');
+                }
+            }
+            
+            // Update status
+            if (data.active !== undefined) {
+                if (data.active) {
+                    status.textContent = 'Countdown Active';
+                    status.className = 'status active';
+                } else {
+                    status.textContent = data.completed ? 'Countdown Completed' : 'No Countdown';
+                    status.className = 'status completed';
+                }
+            }
+            
+            // Update message and target
+            if (data.message) {
+                message.textContent = data.message;
+            }
+            if (data.target_time) {
+                const targetDate = new Date(data.target_time);
+                target.textContent = targetDate.toLocaleTimeString();
+            }
+        }
+        
+        function connectToTimer() {
+            const roundId = document.getElementById('roundId').value.trim();
+            const token = document.getElementById('jwtToken').value.trim();
+            
+            if (!roundId || !token) {
+                addMessage('Please enter both Round ID and JWT token', 'warning');
+                return;
+            }
+            
+            if (socket) {
+                socket.close();
+            }
+            
+            currentRoundId = roundId;
+            const wsUrl = `ws://localhost:8000/ws/round/${roundId}/timer?token=${encodeURIComponent(token)}`;
+            
+            socket = new WebSocket(wsUrl);
+            
+            socket.onopen = function(event) {
+                updateConnectionStatus(true);
+                addMessage(`Connected to round timer: ${roundId}`, 'info');
+            };
+            
+            socket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log('Received:', data);
+                
+                switch(data.type) {
+                    case 'timer_connected':
+                        document.getElementById('roundNumber').textContent = data.round_number || 'Unknown';
+                        addMessage(`Connected to ${data.round_name || 'Round ' + data.round_number}`, 'info');
+                        if (data.timer_status) {
+                            updateTimerDisplay(data.timer_status);
+                        }
+                        break;
+                        
+                    case 'timer_update':
+                        updateTimerDisplay(data);
+                        break;
+                        
+                    case 'timer_warning':
+                        addMessage(`⚠️ ${data.message}`, 'warning');
+                        break;
+                        
+                    case 'round_ended':
+                        addMessage(`🏁 ${data.message}`, 'announcement');
+                        document.getElementById('roundStatus').textContent = 'Round Completed';
+                        document.getElementById('roundStatus').className = 'status completed';
+                        break;
+                        
+                    case 'break_started':
+                        addMessage(`☕ ${data.message}`, 'announcement');
+                        break;
+                        
+                    case 'break_ended':
+                        addMessage(`🎯 ${data.message}`, 'announcement');
+                        break;
+                        
+                    case 'announcement':
+                        addMessage(`📢 ${data.message}`, 'announcement');
+                        break;
+                        
+                    case 'round_extended':
+                        addMessage(`⏰ ${data.message}`, 'info');
+                        break;
+                        
+                    case 'pong':
+                        // Heartbeat response
+                        break;
+                        
+                    default:
+                        addMessage(`Received: ${data.type} - ${JSON.stringify(data)}`, 'info');
+                }
+            };
+            
+            socket.onclose = function(event) {
+                updateConnectionStatus(false);
+                addMessage('Connection closed', 'warning');
+            };
+            
+            socket.onerror = function(error) {
+                updateConnectionStatus(false);
+                addMessage(`Connection error: ${error}`, 'warning');
+            };
+        }
+        
+        function connectToEvent() {
+            const eventId = document.getElementById('eventId').value.trim();
+            const token = document.getElementById('jwtToken').value.trim();
+            
+            if (!eventId || !token) {
+                addMessage('Please enter both Event ID and JWT token', 'warning');
+                return;
+            }
+            
+            if (eventSocket) {
+                eventSocket.close();
+            }
+            
+            currentEventId = eventId;
+            const wsUrl = `ws://localhost:8000/ws/event/${eventId}?token=${encodeURIComponent(token)}`;
+            
+            eventSocket = new WebSocket(wsUrl);
+            
+            eventSocket.onopen = function(event) {
+                updateConnectionStatus(true);
+                addMessage(`Connected to event: ${eventId}`, 'info');
+            };
+            
+            eventSocket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log('Event received:', data);
+                
+                switch(data.type) {
+                    case 'connected':
+                        addMessage(`Connected to event: ${data.event_id}`, 'info');
+                        if (data.countdown_status) {
+                            updateCountdownDisplay(data.countdown_status);
+                        }
+                        break;
+                        
+                    case 'countdown_started':
+                        addMessage(`🚀 ${data.message}`, 'announcement');
+                        break;
+                        
+                    case 'countdown_update':
+                        updateCountdownDisplay(data);
+                        break;
+                        
+                    case 'countdown_warning':
+                        addMessage(`⚠️ ${data.message}`, 'warning');
+                        break;
+                        
+                    case 'countdown_completed':
+                        addMessage(`🎯 ${data.message}`, 'announcement');
+                        document.getElementById('countdownStatus').textContent = 'Event Starting!';
+                        document.getElementById('countdownStatus').className = 'status completed';
+                        break;
+                        
+                    case 'countdown_cancelled':
+                        addMessage(`❌ ${data.message}`, 'warning');
+                        document.getElementById('countdownStatus').textContent = 'Countdown Cancelled';
+                        document.getElementById('countdownStatus').className = 'status completed';
+                        break;
+                        
+                    case 'countdown_extended':
+                        addMessage(`⏰ ${data.message}`, 'info');
+                        break;
+                        
+                    case 'round_started':
+                        addMessage(`🏁 Round ${data.round_number} started!`, 'announcement');
+                        break;
+                        
+                    case 'round_ended':
+                        addMessage(`⏹️ Round ${data.round_number} ended`, 'info');
+                        break;
+                        
+                    case 'pong':
+                        // Heartbeat response
+                        break;
+                        
+                    default:
+                        addMessage(`Event: ${data.type} - ${JSON.stringify(data)}`, 'info');
+                }
+            };
+            
+            eventSocket.onclose = function(event) {
+                updateConnectionStatus(false);
+                addMessage('Event connection closed', 'warning');
+            };
+            
+            eventSocket.onerror = function(error) {
+                updateConnectionStatus(false);
+                addMessage(`Event connection error: ${error}`, 'warning');
+            };
+        }
+        
+        function disconnect() {
+            if (socket) {
+                socket.close();
+                socket = null;
+            }
+            if (eventSocket) {
+                eventSocket.close();
+                eventSocket = null;
+            }
+        }
+        
+        function requestCountdownSync() {
+            if (eventSocket && eventSocket.readyState === WebSocket.OPEN) {
+                eventSocket.send(JSON.stringify({
+                    type: 'get_countdown_status'
+                }));
+            } else {
+                addMessage('Not connected to event', 'warning');
+            }
+        }
+        
+        function requestSync() {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'get_timer_status'
+                }));
+            } else {
+                addMessage('Not connected to timer', 'warning');
+            }
+        }
+        
+        function clearMessages() {
+            document.getElementById('messages').innerHTML = '';
+        }
+        
+        // Send periodic pings to keep connections alive
+        setInterval(() => {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'ping',
+                    timestamp: Date.now()
+                }));
+            }
+            if (eventSocket && eventSocket.readyState === WebSocket.OPEN) {
+                eventSocket.send(JSON.stringify({
+                    type: 'ping',
+                    timestamp: Date.now()
+                }));
+            }
+        }, 30000);
+        
+        // Initialize
+        updateConnectionStatus(false);
+    </script>
+</body>
+</html>

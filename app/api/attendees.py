@@ -19,6 +19,7 @@ from app.models import (
 from app.auth import current_active_user, current_active_organizer
 from app.services import create_qr_service
 from app.utils.validators import ContactValidationMixin
+from app.utils.content_filter import bio_filter
 
 
 router = APIRouter(prefix="/attendees", tags=["Attendees"])
@@ -63,7 +64,7 @@ class AttendeeRegistration(BaseModel, ContactValidationMixin):
     display_name: str = Field(..., min_length=1, max_length=200)
     category: AttendeeCategory
     age: Optional[int] = Field(None, ge=18, le=100)
-    bio: Optional[str] = Field(None, max_length=1000)
+    public_bio: Optional[str] = Field(None, max_length=500, description="Public bio visible to other attendees")
     dietary_requirements: Optional[str] = Field(None, max_length=500)
     
     # Contact information - at least one required
@@ -71,11 +72,19 @@ class AttendeeRegistration(BaseModel, ContactValidationMixin):
     contact_phone: Optional[str] = Field(None, max_length=25)  # Increased for formatted numbers
     fetlife_username: Optional[str] = Field(None, max_length=100)
     contact_visible_to_matches: bool = Field(True)
+    profile_visible: bool = Field(True, description="Whether profile is visible to others")
     
     def validate_contact_info(self):
         """Validate that at least one contact method is provided."""
         if not (self.contact_email or self.contact_phone or self.fetlife_username):
             raise ValueError("At least one contact method (email, phone, or FetLife username) must be provided")
+    
+    def validate_public_bio(self):
+        """Validate public bio content."""
+        if self.public_bio:
+            is_valid, message = bio_filter.validate_bio(self.public_bio, max_length=500)
+            if not is_valid:
+                raise ValueError(message)
 
 
 class AttendeeResponse(BaseModel):
@@ -161,9 +170,10 @@ async def register_for_event(
             detail="Event is at maximum capacity"
         )
     
-    # Validate contact information
+    # Validate contact information and bio
     try:
         registration_data.validate_contact_info()
+        registration_data.validate_public_bio()
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

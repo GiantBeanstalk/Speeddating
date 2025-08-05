@@ -99,17 +99,39 @@ class PDFBadgeService:
         if not attendees:
             raise ValueError("No confirmed attendees found")
         
-        # Generate QR tokens if requested
+        # Generate QR tokens if requested (profile QR codes for badges)
         qr_data = {}
         if include_qr:
             for attendee in attendees:
                 try:
-                    qr_login = await self.qr_service.generate_attendee_qr_token(
-                        attendee.id, expire_hours=72  # 3 days for events
+                    # Generate profile QR token for public profile access
+                    from app.models.qr_login import QRLogin
+                    
+                    qr_login = QRLogin.create_for_attendee(
+                        attendee_id=attendee.id,
+                        event_id=event_id,
+                        user_id=attendee.user_id,
+                        expire_hours=168,  # 7 days for profile badges
+                        token_type="profile_view"
                     )
+                    
+                    # Set QR URL for profile viewing
+                    from app.config import settings
+                    base_url = settings.get("qr_code_base_url", "http://localhost:8000")
+                    qr_login.qr_code_url = f"{base_url}/profiles/{attendee.id}?qr_token={qr_login.token}"
+                    
+                    # Generate the attendee's profile QR token if not exists
+                    if not attendee.profile_qr_token:
+                        attendee.generate_profile_qr_token()
+                    
                     qr_data[attendee.id] = qr_login
+                    session.add(qr_login)
+                    
                 except Exception as e:
-                    print(f"Failed to generate QR for attendee {attendee.id}: {e}")
+                    print(f"Failed to generate profile QR for attendee {attendee.id}: {e}")
+            
+            # Commit QR tokens to database
+            await session.commit()
         
         # Create PDF
         pdf_buffer = BytesIO()
@@ -195,7 +217,7 @@ class PDFBadgeService:
         content_width = self.badge_width - 4 * mm
         content_height = self.badge_height - 4 * mm
         
-        # Draw QR code if available
+        # Draw QR code if available (for profile viewing)
         qr_y_offset = 0
         if qr_login:
             qr_img = self.qr_service.create_qr_code_image(
@@ -210,7 +232,17 @@ class PDFBadgeService:
                 qr_img, qr_x, qr_y, 
                 width=self.qr_size, height=self.qr_size
             )
-            qr_y_offset = self.qr_size + 2 * mm
+            
+            # Add "Profile" label under QR code
+            canvas_obj.setFont("Helvetica", 6)
+            canvas_obj.setFillColor(colors.black)
+            canvas_obj.drawCentredText(
+                qr_x + (self.qr_size / 2), 
+                qr_y - 3 * mm, 
+                "Profile"
+            )
+            
+            qr_y_offset = self.qr_size + 5 * mm  # Extra space for label
         
         # Draw attendee name
         name_text = attendee.display_name or "Attendee"

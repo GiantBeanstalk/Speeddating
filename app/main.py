@@ -15,7 +15,8 @@ from app.auth import (
     auth_router, register_router, reset_password_router, 
     verify_router, users_router
 )
-from app.api import qr_auth_router, events_router, attendees_router
+from app.api import qr_auth_router, events_router, attendees_router, rounds_router, profiles_router
+from app.api.websockets import router as websockets_router
 
 
 @asynccontextmanager
@@ -61,6 +62,11 @@ app.include_router(users_router, prefix="/users", tags=["users"])
 app.include_router(qr_auth_router, prefix="/api")
 app.include_router(events_router, prefix="/api")
 app.include_router(attendees_router, prefix="/api")
+app.include_router(rounds_router, prefix="/api")
+app.include_router(profiles_router, prefix="/api")
+
+# WebSocket routes
+app.include_router(websockets_router, tags=["websockets"])
 
 # Health check endpoint
 @app.get("/health")

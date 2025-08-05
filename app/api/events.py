@@ -18,7 +18,7 @@ from app.models import (
     Round, RoundStatus, Match, MatchResponse
 )
 from app.auth import current_active_organizer, current_active_user
-from app.services import create_matching_service, create_qr_service, create_pdf_service
+from app.services import create_matching_service, create_qr_service, create_pdf_service, countdown_manager, connection_manager
 
 
 router = APIRouter(prefix="/events", tags=["Events"])
@@ -523,3 +523,254 @@ async def delete_event(
     await session.commit()
     
     return {"message": "Event deleted successfully"}
+
+
+# Event Countdown Endpoints
+
+class CountdownStart(BaseModel):
+    duration_minutes: int = Field(..., ge=1, le=60)
+    message: Optional[str] = Field(None, max_length=500)
+
+
+class CountdownExtend(BaseModel):
+    additional_minutes: int = Field(..., ge=1, le=30)
+
+
+@router.post("/{event_id}/countdown/start")
+async def start_event_countdown(
+    event_id: uuid.UUID,
+    countdown_data: CountdownStart,
+    session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(current_active_organizer)
+):
+    """Start countdown to event first round (organizer only)."""
+    
+    # Verify event ownership
+    result = await session.execute(
+        select(Event).where(
+            Event.id == event_id,
+            Event.organizer_id == current_user.id
+        )
+    )
+    event = result.scalar_one_or_none()
+    
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Event not found"
+        )
+    
+    # Check if event is in appropriate state for countdown
+    if event.status not in [EventStatus.REGISTRATION_CLOSED, EventStatus.REGISTRATION_OPEN]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot start countdown for event with status {event.status.value}"
+        )
+    
+    # Check if countdown is already active
+    if event.countdown_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Countdown is already active for this event"
+        )
+    
+    try:
+        # Start countdown in event model
+        event.start_countdown(
+            duration_minutes=countdown_data.duration_minutes,
+            message=countdown_data.message
+        )
+        await session.commit()
+        
+        # Start real-time countdown manager
+        await countdown_manager.start_event_countdown(
+            event_id=event_id,
+            duration_minutes=countdown_data.duration_minutes,
+            message=countdown_data.message,
+            session=session
+        )
+        
+        # Broadcast countdown start to all event participants
+        await connection_manager.broadcast_to_event({
+            "type": "countdown_started",
+            "event_id": str(event_id),
+            "duration_minutes": countdown_data.duration_minutes,
+            "message": countdown_data.message or f"Event starts in {countdown_data.duration_minutes} minutes!",
+            "target_time": event.countdown_target_time.isoformat() if event.countdown_target_time else None
+        }, event_id)
+        
+        return {
+            "message": "Countdown started successfully",
+            "duration_minutes": countdown_data.duration_minutes,
+            "target_time": event.countdown_target_time.isoformat() if event.countdown_target_time else None
+        }
+        
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+@router.post("/{event_id}/countdown/stop")
+async def stop_event_countdown(
+    event_id: uuid.UUID,
+    session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(current_active_organizer)
+):
+    """Stop active countdown (organizer only)."""
+    
+    # Verify event ownership
+    result = await session.execute(
+        select(Event).where(
+            Event.id == event_id,
+            Event.organizer_id == current_user.id
+        )
+    )
+    event = result.scalar_one_or_none()
+    
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Event not found"
+        )
+    
+    if not event.countdown_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No active countdown to stop"
+        )
+    
+    # Stop countdown in event model
+    event.stop_countdown()
+    await session.commit()
+    
+    # Stop real-time countdown manager
+    await countdown_manager.stop_event_countdown(event_id)
+    
+    # Broadcast countdown cancellation
+    await connection_manager.broadcast_to_event({
+        "type": "countdown_cancelled",
+        "event_id": str(event_id),
+        "message": "Countdown has been cancelled by the organizer."
+    }, event_id)
+    
+    return {"message": "Countdown stopped successfully"}
+
+
+@router.post("/{event_id}/countdown/extend")
+async def extend_event_countdown(
+    event_id: uuid.UUID,
+    extend_data: CountdownExtend,
+    session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(current_active_organizer)
+):
+    """Extend active countdown (organizer only)."""
+    
+    # Verify event ownership
+    result = await session.execute(
+        select(Event).where(
+            Event.id == event_id,
+            Event.organizer_id == current_user.id
+        )
+    )
+    event = result.scalar_one_or_none()
+    
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Event not found"
+        )
+    
+    if not event.countdown_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No active countdown to extend"
+        )
+    
+    try:
+        # Extend countdown in event model
+        event.extend_countdown(extend_data.additional_minutes)
+        await session.commit()
+        
+        # Extend real-time countdown manager
+        await countdown_manager.extend_event_countdown(
+            event_id=event_id,
+            additional_minutes=extend_data.additional_minutes
+        )
+        
+        return {
+            "message": f"Countdown extended by {extend_data.additional_minutes} minutes",
+            "new_target_time": event.countdown_target_time.isoformat() if event.countdown_target_time else None
+        }
+        
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+@router.get("/{event_id}/countdown/status")
+async def get_event_countdown_status(
+    event_id: uuid.UUID,
+    session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(current_active_user)
+):
+    """Get current countdown status for an event."""
+    
+    # Get event (users can see countdown status for events they're attending)
+    result = await session.execute(
+        select(Event).where(Event.id == event_id)
+    )
+    event = result.scalar_one_or_none()
+    
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Event not found"
+        )
+    
+    # Check if user has access to this event
+    if not current_user.is_organizer or event.organizer_id != current_user.id:
+        # Check if user is an attendee
+        attendee_result = await session.execute(
+            select(Attendee).where(
+                and_(
+                    Attendee.event_id == event_id,
+                    Attendee.user_id == current_user.id
+                )
+            )
+        )
+        if not attendee_result.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to view countdown for this event"
+            )
+    
+    # Get countdown status from event model
+    countdown_status = event.get_countdown_status()
+    
+    # Also get real-time status if available
+    realtime_status = countdown_manager.get_countdown_status(event_id)
+    if realtime_status:
+        countdown_status.update(realtime_status)
+    
+    return {
+        "event_id": str(event_id),
+        "event_name": event.name,
+        "countdown": countdown_status
+    }
+
+
+@router.get("/active-countdowns")
+async def get_active_countdowns(
+    current_user: User = Depends(current_active_organizer)
+):
+    """Get all active event countdowns (organizer only)."""
+    
+    active_countdowns = countdown_manager.get_all_active_countdowns()
+    return {
+        "active_countdowns": active_countdowns,
+        "total_active": len(active_countdowns)
+    }

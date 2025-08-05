@@ -19,6 +19,7 @@ from app.models import (
 )
 from app.auth import current_active_organizer
 from app.services import create_matching_service
+from app.services.websocket_manager import connection_manager, timer_manager
 
 
 router = APIRouter(prefix="/rounds", tags=["Rounds"])
@@ -371,12 +372,22 @@ async def start_round(
     
     await session.commit()
     
-    # Schedule automatic round end (background task)
-    background_tasks.add_task(
-        schedule_round_end,
-        round_id,
-        round_obj.duration_minutes
+    # Start real-time timer
+    await timer_manager.start_round_timer(
+        round_id=round_id,
+        duration_minutes=round_obj.duration_minutes,
+        break_minutes=round_obj.break_after_minutes,
+        session=session
     )
+    
+    # Broadcast round start to event room
+    await connection_manager.broadcast_to_event({
+        "type": "round_started",
+        "round_id": str(round_id),
+        "round_number": round_obj.round_number,
+        "duration_minutes": round_obj.duration_minutes,
+        "message": f"Round {round_obj.round_number} has started!"
+    }, round_obj.event_id)
     
     return {
         "message": "Round started successfully",
@@ -424,9 +435,16 @@ async def end_round(
     round_obj.end_round()
     await session.commit()
     
-    # Remove from active timers
-    if round_id in active_timers:
-        del active_timers[round_id]
+    # Stop real-time timer
+    await timer_manager.stop_round_timer(round_id)
+    
+    # Broadcast round end to event room
+    await connection_manager.broadcast_to_event({
+        "type": "round_ended",
+        "round_id": str(round_id),
+        "round_number": round_obj.round_number,
+        "message": f"Round {round_obj.round_number} has ended."
+    }, round_obj.event_id)
     
     return {
         "message": "Round ended successfully",
@@ -474,13 +492,15 @@ async def start_break(
     round_obj.start_break()
     await session.commit()
     
-    # Schedule automatic break end
-    if round_obj.break_after_minutes > 0:
-        background_tasks.add_task(
-            schedule_break_end,
-            round_id,
-            round_obj.break_after_minutes
-        )
+    # The timer manager will automatically handle the break timing
+    # Broadcast break start to event room
+    await connection_manager.broadcast_to_event({
+        "type": "break_started",
+        "round_id": str(round_id),
+        "round_number": round_obj.round_number,
+        "break_duration_minutes": round_obj.break_after_minutes,
+        "message": f"Break time! {round_obj.break_after_minutes} minutes until next round."
+    }, round_obj.event_id)
     
     return {
         "message": "Break started successfully",
@@ -579,6 +599,145 @@ async def update_round(
     await session.commit()
     
     return {"message": "Round updated successfully"}
+
+
+@router.post("/{round_id}/announce")
+async def make_round_announcement(
+    round_id: uuid.UUID,
+    announcement: dict,
+    session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(current_active_organizer)
+):
+    """Make an announcement to all participants in a round."""
+    
+    round_result = await session.execute(
+        select(Round)
+        .options(selectinload(Round.event))
+        .where(Round.id == round_id)
+    )
+    round_obj = round_result.scalar_one_or_none()
+    
+    if not round_obj:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Round not found"
+        )
+    
+    # Verify event ownership
+    if round_obj.event.organizer_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to make announcements for this round"
+        )
+    
+    message = announcement.get("message", "")
+    if not message:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Announcement message is required"
+        )
+    
+    # Broadcast announcement to round timer subscribers
+    await connection_manager.broadcast_to_round_timer({
+        "type": "announcement",
+        "round_id": str(round_id),
+        "message": message,
+        "from_organizer": True,
+        "organizer_name": current_user.email
+    }, round_id)
+    
+    # Also broadcast to event room
+    await connection_manager.broadcast_to_event({
+        "type": "round_announcement",
+        "round_id": str(round_id),
+        "round_number": round_obj.round_number,
+        "message": message,
+        "from_organizer": True
+    }, round_obj.event_id)
+    
+    return {"message": "Announcement sent successfully"}
+
+
+@router.get("/active-timers")
+async def get_active_timers(
+    current_user: User = Depends(current_active_organizer)
+):
+    """Get all active round timers (organizer only)."""
+    
+    active_timers = timer_manager.get_all_active_timers()
+    return {
+        "active_timers": active_timers,
+        "total_active": len(active_timers)
+    }
+
+
+@router.post("/{round_id}/extend")
+async def extend_round_time(
+    round_id: uuid.UUID,
+    extension_data: dict,
+    session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(current_active_organizer)
+):
+    """Extend the time of an active round."""
+    
+    round_result = await session.execute(
+        select(Round)
+        .options(selectinload(Round.event))
+        .where(Round.id == round_id)
+    )
+    round_obj = round_result.scalar_one_or_none()
+    
+    if not round_obj:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Round not found"
+        )
+    
+    # Verify event ownership
+    if round_obj.event.organizer_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to extend this round"
+        )
+    
+    if round_obj.status != RoundStatus.ACTIVE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Can only extend active rounds"
+        )
+    
+    additional_minutes = extension_data.get("additional_minutes", 0)
+    if additional_minutes <= 0 or additional_minutes > 30:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Additional minutes must be between 1 and 30"
+        )
+    
+    # Update round duration
+    round_obj.duration_minutes += additional_minutes
+    await session.commit()
+    
+    # Broadcast extension to participants
+    await connection_manager.broadcast_to_round_timer({
+        "type": "round_extended",
+        "round_id": str(round_id),
+        "additional_minutes": additional_minutes,
+        "new_duration": round_obj.duration_minutes,
+        "message": f"Round extended by {additional_minutes} minutes!"
+    }, round_id)
+    
+    await connection_manager.broadcast_to_event({
+        "type": "round_extended",
+        "round_id": str(round_id),
+        "round_number": round_obj.round_number,
+        "additional_minutes": additional_minutes,
+        "message": f"Round {round_obj.round_number} extended by {additional_minutes} minutes"
+    }, round_obj.event_id)
+    
+    return {
+        "message": f"Round extended by {additional_minutes} minutes",
+        "new_duration": round_obj.duration_minutes
+    }
 
 
 # Background task functions
