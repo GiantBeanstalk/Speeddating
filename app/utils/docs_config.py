@@ -4,42 +4,42 @@ Documentation configuration and utilities.
 This module provides configuration and helper functions for consistent
 documentation generation and organization.
 """
-import os
+
 from pathlib import Path
-from typing import Optional
 
 from app.config import settings
 
 
 class DocsConfig:
     """Configuration class for documentation settings."""
-    
+
     def __init__(self):
         self.base_dir = Path(__file__).parent.parent.parent  # Project root
         self.docs_dir = self.base_dir / settings.get("docs_directory", "docs")
         self.auto_generate = settings.get("auto_generate_docs", True)
-        
+
         # Ensure docs directory exists
         self.docs_dir.mkdir(exist_ok=True)
-    
+
     def get_docs_path(self, filename: str) -> Path:
         """Get the full path for a documentation file."""
         return self.docs_dir / filename
-    
+
     def ensure_docs_dir_exists(self) -> None:
         """Ensure the documentation directory exists."""
         self.docs_dir.mkdir(exist_ok=True)
-    
+
     def list_docs_files(self) -> list[str]:
         """List all documentation files in the docs directory."""
         if not self.docs_dir.exists():
             return []
-        
+
         return [
-            f.name for f in self.docs_dir.iterdir() 
-            if f.is_file() and f.suffix.lower() == '.md'
+            f.name
+            for f in self.docs_dir.iterdir()
+            if f.is_file() and f.suffix.lower() == ".md"
         ]
-    
+
     def get_doc_template_path(self, template_name: str) -> Path:
         """Get path for documentation templates."""
         templates_dir = self.docs_dir / "templates"
@@ -52,46 +52,44 @@ docs_config = DocsConfig()
 
 
 def create_documentation_file(
-    filename: str, 
-    content: str, 
-    overwrite: bool = False
+    filename: str, content: str, overwrite: bool = False
 ) -> Path:
     """
     Create a documentation file in the docs directory.
-    
+
     Args:
         filename: Name of the documentation file (should end with .md)
         content: Content to write to the file
         overwrite: Whether to overwrite existing files
-        
+
     Returns:
         Path to the created file
-        
+
     Raises:
         FileExistsError: If file exists and overwrite is False
     """
-    if not filename.endswith('.md'):
-        filename += '.md'
-    
+    if not filename.endswith(".md"):
+        filename += ".md"
+
     file_path = docs_config.get_docs_path(filename)
-    
+
     if file_path.exists() and not overwrite:
         raise FileExistsError(f"Documentation file {filename} already exists")
-    
-    with open(file_path, 'w', encoding='utf-8') as f:
+
+    with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
-    
+
     return file_path
 
 
 def update_documentation_file(filename: str, content: str) -> Path:
     """
     Update or create a documentation file in the docs directory.
-    
+
     Args:
         filename: Name of the documentation file
         content: Content to write to the file
-        
+
     Returns:
         Path to the updated file
     """
@@ -101,10 +99,10 @@ def update_documentation_file(filename: str, content: str) -> Path:
 def get_documentation_template(template_name: str) -> str:
     """
     Get a documentation template.
-    
+
     Args:
         template_name: Name of the template
-        
+
     Returns:
         Template content as string
     """
@@ -138,7 +136,6 @@ def get_documentation_template(template_name: str) -> str:
 ## Examples
 {usage_examples}
 """,
-        
         "feature_guide": """# {feature_name}
 
 ## Overview
@@ -162,7 +159,6 @@ def get_documentation_template(template_name: str) -> str:
 ## Troubleshooting
 {troubleshooting}
 """,
-        
         "system_architecture": """# {system_name} Architecture
 
 ## Overview
@@ -182,9 +178,9 @@ def get_documentation_template(template_name: str) -> str:
 
 ## Deployment
 {deployment_instructions}
-"""
+""",
     }
-    
+
     return templates.get(template_name, "")
 
 

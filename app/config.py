@@ -1,6 +1,7 @@
 """
 Configuration management using Dynaconf.
 """
+
 from dynaconf import Dynaconf
 
 settings = Dynaconf(
@@ -13,5 +14,5 @@ settings = Dynaconf(
         {"name": "SECRET_KEY", "must_exist": True},
         {"name": "DATABASE_URL", "default": "sqlite+aiosqlite:///./speed_dating.db"},
         {"name": "DEBUG", "default": False, "cast": bool},
-    ]
+    ],
 )

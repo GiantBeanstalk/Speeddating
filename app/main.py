@@ -4,19 +4,30 @@ Main FastAPI application entry point.
 This module creates and configures the FastAPI application with all routes,
 middleware, and startup/shutdown event handlers.
 """
+
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.config import settings
-from app.database import create_db_and_tables, close_db
-from app.auth import (
-    auth_router, register_router, reset_password_router, 
-    verify_router, users_router
+from app.api import (
+    attendees_router,
+    events_router,
+    profiles_router,
+    qr_auth_router,
+    rounds_router,
 )
-from app.api import qr_auth_router, events_router, attendees_router, rounds_router, profiles_router
 from app.api.websockets import router as websockets_router
+from app.auth import (
+    auth_router,
+    register_router,
+    reset_password_router,
+    users_router,
+    verify_router,
+)
+from app.config import settings
+from app.database import close_db, create_db_and_tables
 
 
 @asynccontextmanager
@@ -36,7 +47,7 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs" if settings.get("DEBUG", False) else None,
     redoc_url="/redoc" if settings.get("DEBUG", False) else None,
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # CORS middleware
@@ -68,6 +79,7 @@ app.include_router(profiles_router, prefix="/api")
 # WebSocket routes
 app.include_router(websockets_router, tags=["websockets"])
 
+
 # Health check endpoint
 @app.get("/health")
 async def health_check():
@@ -75,8 +87,9 @@ async def health_check():
     return {
         "status": "healthy",
         "service": "Speed Dating Application",
-        "version": "1.0.0"
+        "version": "1.0.0",
     }
+
 
 # Root endpoint
 @app.get("/")
@@ -84,18 +97,20 @@ async def root():
     """Root endpoint with basic information."""
     return {
         "message": "Welcome to the Speed Dating Application",
-        "docs": "/docs" if settings.get("DEBUG", False) else "Documentation disabled in production",
-        "health": "/health"
+        "docs": "/docs"
+        if settings.get("DEBUG", False)
+        else "Documentation disabled in production",
+        "health": "/health",
     }
 
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(
         "app.main:app",
         host=settings.get("HOST", "127.0.0.1"),
         port=settings.get("PORT", 8000),
         reload=settings.get("DEBUG", False),
-        log_level="info"
+        log_level="info",
     )

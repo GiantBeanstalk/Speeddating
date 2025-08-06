@@ -2,24 +2,24 @@
 Database models package.
 """
 
-from .user import User, OAuthAccount
-from .event import Event, EventStatus
 from .attendee import Attendee, AttendeeCategory, AttendeePreference
-from .round import Round, RoundStatus
+from .event import Event, EventStatus
 from .match import Match, MatchResponse
 from .qr_login import QRLogin
+from .round import Round, RoundStatus
+from .user import OAuthAccount, User
 
 __all__ = [
     "User",
-    "OAuthAccount", 
+    "OAuthAccount",
     "Event",
     "EventStatus",
     "Attendee",
     "AttendeeCategory",
     "AttendeePreference",
     "Round",
-    "RoundStatus", 
+    "RoundStatus",
     "Match",
     "MatchResponse",
-    "QRLogin"
+    "QRLogin",
 ]
