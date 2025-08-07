@@ -28,19 +28,21 @@ class Validators:
     @staticmethod
     def validate_email(email: str, field_name: str = "email") -> str:
         """Validate email address format."""
+        original_email = email
+        
         if not email:
-            raise ValidationError(f"{field_name} is required", field=field_name)
+            raise ValidationError(f"{field_name} is required", field=field_name, value=original_email)
 
         email = email.strip().lower()
 
         if len(email) > 254:
             raise ValidationError(
-                f"{field_name} is too long", field=field_name, value=email
+                f"{field_name} is too long", field=field_name, value=original_email
             )
 
         if not Validators.EMAIL_PATTERN.match(email):
             raise ValidationError(
-                f"Invalid {field_name} format", field=field_name, value=email
+                f"Invalid {field_name} format", field=field_name, value=original_email
             )
 
         return email
@@ -295,6 +297,48 @@ class Validators:
             )
 
         return value
+
+    @staticmethod
+    def validate_bio(bio: str, field_name: str = "bio") -> str:
+        """Validate profile bio content and length."""
+        if not bio:
+            raise ValidationError(f"{field_name} is required", field=field_name)
+
+        bio = bio.strip()
+        
+        if len(bio) < 10:
+            raise ValidationError(
+                f"{field_name} must be at least 10 characters", 
+                field=field_name, 
+                value=bio
+            )
+
+        if len(bio) > 1000:
+            raise ValidationError(
+                f"{field_name} must be less than 1000 characters", 
+                field=field_name, 
+                value=bio
+            )
+
+        # Sanitize HTML content to prevent XSS
+        sanitized_bio = Validators.sanitize_html_input(bio, field_name)
+        
+        return sanitized_bio
+
+    @staticmethod
+    def validate_integer(
+        value: int,
+        min_value: int | None = None,
+        max_value: int | None = None,
+        field_name: str = "field",
+    ) -> int:
+        """Validate integer within range (alias for validate_integer_range)."""
+        return Validators.validate_integer_range(value, min_value, max_value, field_name)
+
+    @staticmethod
+    def validate_password_strength(password: str, field_name: str = "password") -> str:
+        """Validate password strength requirements (alias for BusinessRuleValidators)."""
+        return BusinessRuleValidators.validate_password_strength(password)
 
 
 class BusinessRuleValidators:

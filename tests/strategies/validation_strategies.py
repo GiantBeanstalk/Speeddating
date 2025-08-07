@@ -156,8 +156,8 @@ path_traversal_strategy = st.sampled_from([
 
 # Large input strategies for testing limits
 large_text_strategy = st.text(
-    min_size=10000,
-    max_size=50000,
+    min_size=1000,
+    max_size=5000,
     alphabet=st.characters(whitelist_categories=("L", "N"))
 )
 

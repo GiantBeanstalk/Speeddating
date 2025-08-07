@@ -4,7 +4,7 @@ Validation utilities for contact information and other fields.
 
 import re
 
-from pydantic import validator
+from pydantic import field_validator
 
 
 def validate_uk_phone_number(phone: str) -> bool:
@@ -135,19 +135,22 @@ def format_uk_phone_number(phone: str) -> str:
 class ContactValidationMixin:
     """Mixin class for contact validation in Pydantic models."""
 
-    @validator("contact_email")
+    @field_validator("contact_email")
+    @classmethod
     def validate_contact_email(cls, v):
         if v and not validate_email(v):
             raise ValueError("Invalid email address format")
         return v
 
-    @validator("contact_phone")
+    @field_validator("contact_phone")
+    @classmethod
     def validate_contact_phone(cls, v):
         if v and not validate_uk_phone_number(v):
             raise ValueError("Invalid UK phone number format")
         return format_uk_phone_number(v) if v else v
 
-    @validator("fetlife_username")
+    @field_validator("fetlife_username")
+    @classmethod
     def validate_fetlife_username(cls, v):
         if v and not validate_fetlife_username(v):
             raise ValueError("Invalid FetLife username format")

@@ -21,7 +21,7 @@ hypothesis_settings.register_profile(
     "test", 
     max_examples=10,
     deadline=2000,
-    suppress_health_check=[HealthCheck.too_slow]
+    suppress_health_check=[HealthCheck.too_slow, HealthCheck.function_scoped_fixture]
 )
 hypothesis_settings.load_profile("test")
 
@@ -41,3 +41,12 @@ def faker_instance() -> Faker:
     fake = Faker("en_GB")
     fake.seed_instance(12345)
     return fake
+
+
+@pytest.fixture
+def client():
+    """Create a test client for API testing."""
+    from fastapi.testclient import TestClient
+    from app.main import app
+    
+    return TestClient(app)

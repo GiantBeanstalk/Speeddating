@@ -1,0 +1,93 @@
+# .gitignore for Speeddating project
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.env
+.venv
+env/
+venv/
+ENV/
+.hypothesis/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Database
+*.db
+*.sqlite3
+*.sqlite
+*.db-journal
+*.sqlite3-journal
+
+# Binary/compiled files
+*.dll
+*.dylib
+*.exe
+*.out
+*.bin
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.iso
+
+# Logs
+logs/
+*.log
+
+# Local configuration
+.env
+*.env
+.env.*
+!.env.example
+.secrets.toml
+.secrets.toml.*
+!.secrets.toml.example
+.super_user_secret
+settings.local.toml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.*.sw?
+*.sublime-workspace
+*.sublime-project
+
+# Build and dist
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Cache and temp files
+.cache/
+*.temp
+*.tmp
+*.bak
+.*.bak
+*.orig
+
+# Dependency management
+.python-version
+poetry.lock
+package-lock.json
+yarn.lock
+uv.lock
+
+# AI and tool specific
+.claude/
+.copilot/
+.hypothesis/

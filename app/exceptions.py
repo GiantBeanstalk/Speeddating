@@ -48,6 +48,9 @@ class ValidationError(SpeedDatingException):
         value: Any | None = None,
         details: dict[str, Any] | None = None,
     ):
+        self.field = field
+        self.value = value
+        
         validation_details = details or {}
         if field:
             validation_details["field"] = field
