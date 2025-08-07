@@ -95,7 +95,7 @@ def validate_request(
                         "details": e.details,
                         "correlation_id": correlation_id,
                     },
-                )
+                ) from e
             except Exception as e:
                 logger.error(f"Unexpected error in {func.__name__}: {str(e)}")
                 raise
@@ -142,7 +142,7 @@ def validate_request(
                         "message": e.message,
                         "details": e.details,
                     },
-                )
+                ) from e
             except Exception as e:
                 logger.error(f"Unexpected error in {func.__name__}: {str(e)}")
                 raise

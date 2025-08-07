@@ -6,10 +6,8 @@ Provides secure one-time super user account creation using a generated secret ke
 
 import hashlib
 import secrets
-import uuid
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Optional
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,39 +26,39 @@ class SuperUserManager:
         """Generate a new super user secret key and save it to file."""
         # Generate a cryptographically secure random key
         secret = secrets.token_urlsafe(32)
-        
+
         # Create timestamp for when key was generated
         generated_at = datetime.now(UTC).isoformat()
-        
+
         # Hash the secret for storage (we'll compare hashes)
         secret_hash = hashlib.sha256(secret.encode()).hexdigest()
-        
+
         # Save to file
         with open(self.secret_file_path, "w") as f:
             f.write(f"{secret_hash}\n{generated_at}\n")
-        
+
         # Set restrictive permissions (owner read/write only)
         self.secret_file_path.chmod(0o600)
-        
+
         return secret
 
     def verify_secret_key(self, provided_secret: str) -> bool:
         """Verify the provided secret against stored hash."""
         if not self.secret_file_path.exists():
             return False
-            
+
         try:
-            with open(self.secret_file_path, "r") as f:
+            with open(self.secret_file_path) as f:
                 lines = f.read().strip().split("\n")
                 if len(lines) < 2:
                     return False
-                    
+
                 stored_hash = lines[0]
-                
+
             # Hash the provided secret and compare
             provided_hash = hashlib.sha256(provided_secret.encode()).hexdigest()
             return secrets.compare_digest(stored_hash, provided_hash)
-            
+
         except (FileNotFoundError, PermissionError, ValueError):
             return False
 
@@ -88,10 +86,7 @@ class SuperUserManager:
 
     async def can_create_super_user(self, session: AsyncSession) -> bool:
         """Check if super user creation is allowed (no super user exists and secret key exists)."""
-        return (
-            not await self.super_user_exists(session) 
-            and self.secret_key_exists()
-        )
+        return not await self.super_user_exists(session) and self.secret_key_exists()
 
 
 # Global instance
@@ -108,7 +103,7 @@ def verify_super_user_secret(secret: str) -> bool:
     return super_user_manager.verify_secret_key(secret)
 
 
-async def initialize_super_user_secret() -> Optional[str]:
+async def initialize_super_user_secret() -> str | None:
     """Initialize super user secret if none exists and no super user exists."""
     # Only generate secret on first run
     if not super_user_manager.secret_key_exists():
@@ -122,9 +117,11 @@ async def initialize_super_user_secret() -> Optional[str]:
         print("• This key will only be shown ONCE")
         print("• Save it securely - you'll need it to create the first admin account")
         print("• The secret file is stored with restricted permissions")
-        print("• This registration will be disabled after the first super user is created")
+        print(
+            "• This registration will be disabled after the first super user is created"
+        )
         print("• Access the super user registration at: /setup/super-user")
         print("=" * 60)
         return secret
-    
+
     return None

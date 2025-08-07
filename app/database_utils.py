@@ -83,8 +83,6 @@ async def database_transaction(
     Yields:
         AsyncSession: Database session within transaction
     """
-    logger = get_contextual_logger("database", operation=operation)
-
     # Use provided session or create new one
     if session is None:
         async with get_async_session() as new_session:

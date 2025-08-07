@@ -114,10 +114,10 @@ class Validators:
 
         try:
             return uuid.UUID(value_str)
-        except ValueError:
+        except ValueError as e:
             raise ValidationError(
                 f"Invalid {field_name} format", field=field_name, value=value_str
-            )
+            ) from e
 
     @staticmethod
     def validate_string_length(
@@ -162,10 +162,10 @@ class Validators:
         if not isinstance(value, int):
             try:
                 value = int(value)
-            except (ValueError, TypeError):
+            except (ValueError, TypeError) as e:
                 raise ValidationError(
                     f"{field_name} must be an integer", field=field_name, value=value
-                )
+                ) from e
 
         if min_value is not None and value < min_value:
             raise ValidationError(
@@ -203,10 +203,10 @@ class Validators:
             if parsed_dt.tzinfo is None:
                 parsed_dt = parsed_dt.replace(tzinfo=UTC)
             return parsed_dt
-        except ValueError:
+        except ValueError as e:
             raise ValidationError(
                 f"Invalid {field_name} format", field=field_name, value=str(value)
-            )
+            ) from e
 
     @staticmethod
     def validate_future_datetime(
@@ -248,10 +248,10 @@ class Validators:
                     value=value,
                 )
 
-        except Exception:
+        except Exception as e:
             raise ValidationError(
                 f"Invalid {field_name} format", field=field_name, value=value
-            )
+            ) from e
 
         return value
 
