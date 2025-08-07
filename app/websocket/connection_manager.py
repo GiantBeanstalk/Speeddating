@@ -8,7 +8,7 @@ import asyncio
 import json
 import logging
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import WebSocket
@@ -57,8 +57,8 @@ class ConnectionManager:
             "user_id": user_id,
             "event_id": event_id,
             "connection_type": connection_type,
-            "connected_at": datetime.utcnow(),
-            "last_activity": datetime.utcnow(),
+            "connected_at": datetime.now(UTC),
+            "last_activity": datetime.now(UTC),
         }
 
         # Add to event room if specified
@@ -66,7 +66,7 @@ class ConnectionManager:
             await self.join_event_room(connection_id, event_id)
 
         # Track heartbeat
-        self.last_heartbeat[connection_id] = datetime.utcnow()
+        self.last_heartbeat[connection_id] = datetime.now(UTC)
 
         logger.info(
             f"WebSocket connected: {connection_id} (user: {user_id}, event: {event_id})"
@@ -77,7 +77,7 @@ class ConnectionManager:
             {
                 "type": "connection_established",
                 "connection_id": connection_id,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
             connection_id,
         )
@@ -146,8 +146,8 @@ class ConnectionManager:
 
             # Update last activity
             if connection_id in self.connection_metadata:
-                self.connection_metadata[connection_id]["last_activity"] = (
-                    datetime.utcnow()
+                self.connection_metadata[connection_id]["last_activity"] = datetime.now(
+                    UTC
                 )
 
             return True
@@ -199,15 +199,15 @@ class ConnectionManager:
     async def handle_heartbeat(self, connection_id: str):
         """Handle heartbeat from a connection."""
         if connection_id in self.active_connections:
-            self.last_heartbeat[connection_id] = datetime.utcnow()
+            self.last_heartbeat[connection_id] = datetime.now(UTC)
             await self.send_personal_message(
-                {"type": "heartbeat_ack", "timestamp": datetime.utcnow().isoformat()},
+                {"type": "heartbeat_ack", "timestamp": datetime.now(UTC).isoformat()},
                 connection_id,
             )
 
     async def cleanup_stale_connections(self, timeout_minutes: int = 30):
         """Clean up connections that haven't sent heartbeat recently."""
-        cutoff = datetime.utcnow().timestamp() - (timeout_minutes * 60)
+        cutoff = datetime.now(UTC).timestamp() - (timeout_minutes * 60)
         stale_connections = []
 
         for connection_id, last_beat in self.last_heartbeat.items():

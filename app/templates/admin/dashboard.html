@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Speed Dating{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-white">Admin Dashboard</h1>
+        <p class="mt-2 text-slate-400">Manage your speed dating events and monitor performance</p>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mb-8">
+        <div class="flex flex-wrap gap-4">
+            <a href="/admin/events/create" class="btn btn-primary">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Create New Event
+            </a>
+            <button 
+                hx-get="/admin/statistics/refresh" 
+                hx-target="#dashboard-stats" 
+                hx-swap="outerHTML"
+                class="btn btn-secondary">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Refresh Stats
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div id="dashboard-stats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Events -->
+        <div class="card">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-red-900/50">
+                    <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-slate-400">Total Events</p>
+                    <p class="text-2xl font-semibold text-white">{{ stats.total_events or 0 }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Attendees -->
+        <div class="card">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-900/50">
+                    <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-slate-400">Total Attendees</p>
+                    <p class="text-2xl font-semibold text-white">{{ stats.total_attendees or 0 }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Events -->
+        <div class="card">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-blue-900/50">
+                    <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-slate-400">Active Events</p>
+                    <p class="text-2xl font-semibold text-white">{{ stats.active_events or 0 }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Matches -->
+        <div class="card">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-red-900/50">
+                    <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-slate-400">Total Matches</p>
+                    <p class="text-2xl font-semibold text-white">{{ stats.total_matches or 0 }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Recent Events -->
+        <div class="lg:col-span-2">
+            <div class="card">
+                <div class="card-header">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xl font-semibold text-white">Recent Events</h2>
+                        <a href="/admin/events" class="text-red-400 hover:text-red-300 text-sm">
+                            View All →
+                        </a>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    {% for event in recent_events %}
+                    <div class="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
+                        <div class="flex-1">
+                            <h3 class="font-medium text-white">{{ event.name }}</h3>
+                            <p class="text-sm text-slate-400 mt-1">
+                                {{ event.start_time.strftime('%B %d, %Y at %I:%M %p') if event.start_time else 'No date set' }}
+                            </p>
+                            <div class="flex items-center mt-2 space-x-4">
+                                <span class="badge badge-{{ 'success' if event.status.value == 'active' else 'gray' }}">
+                                    {{ event.status.value.title() }}
+                                </span>
+                                <span class="text-xs text-slate-400">
+                                    {{ event.attendee_count or 0 }} attendees
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <a href="/admin/events/{{ event.id }}" class="btn btn-secondary btn-sm">
+                                Manage
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-8 text-slate-400">
+                        <svg class="w-12 h-12 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <p>No events yet</p>
+                        <a href="/admin/events/create" class="text-red-400 hover:text-red-300 text-sm">
+                            Create your first event
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats & Actions -->
+        <div class="space-y-6">
+            <!-- Event Status Summary -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-lg font-medium text-white">Event Status</h3>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">Draft</span>
+                        <span class="text-white">{{ status_counts.draft or 0 }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">Published</span>
+                        <span class="text-white">{{ status_counts.published or 0 }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">Active</span>
+                        <span class="text-white">{{ status_counts.active or 0 }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">Completed</span>
+                        <span class="text-white">{{ status_counts.completed or 0 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-lg font-medium text-white">Quick Actions</h3>
+                </div>
+                <div class="space-y-3">
+                    <a href="/admin/attendees" class="block p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition-colors">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-slate-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-white">Manage Attendees</p>
+                                <p class="text-xs text-slate-400">View and manage registrations</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="/admin/matches" class="block p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition-colors">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-slate-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-white">Match Results</p>
+                                <p class="text-xs text-slate-400">View statistics and export data</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="/admin/qr-codes" class="block p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition-colors">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-slate-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-white">QR Codes & Badges</p>
+                                <p class="text-xs text-slate-400">Generate and manage QR codes</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-lg font-medium text-white">System Status</h3>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-400">WebSocket</span>
+                        <span class="badge badge-success">Online</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-400">Database</span>
+                        <span class="badge badge-success">Healthy</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-400">Last Backup</span>
+                        <span class="text-xs text-slate-400">2 hours ago</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh stats every 30 seconds
+    setInterval(function() {
+        const refreshBtn = document.querySelector('[hx-get="/admin/statistics/refresh"]');
+        if (refreshBtn && !refreshBtn.classList.contains('htmx-request')) {
+            refreshBtn.click();
+        }
+    }, 30000);
+});
+</script>
+{% endblock %}

@@ -3,7 +3,7 @@ Round model for speed dating event rounds.
 """
 
 import uuid
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, func
@@ -109,7 +109,7 @@ class Round(Base):
             raise ValueError(f"Cannot start round with status {self.status}")
 
         self.status = RoundStatus.ACTIVE
-        self.actual_start = datetime.utcnow()
+        self.actual_start = datetime.now(UTC)
         self.is_break_active = False
 
     def start_break(self) -> None:
@@ -126,7 +126,7 @@ class Round(Base):
             raise ValueError(f"Cannot end round with status {self.status}")
 
         self.status = RoundStatus.COMPLETED
-        self.actual_end = datetime.utcnow()
+        self.actual_end = datetime.now(UTC)
         self.is_break_active = False
 
     def cancel_round(self, reason: str | None = None) -> None:
@@ -137,7 +137,7 @@ class Round(Base):
 
     def get_duration_info(self) -> dict:
         """Get timing information for this round."""
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
 
         info = {
             "round_id": str(self.id),

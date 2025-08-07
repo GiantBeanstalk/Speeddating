@@ -17,6 +17,7 @@ from app.database import Base
 if False:  # TYPE_CHECKING
     from .attendee import Attendee
     from .event import Event
+    from .password_reset import PasswordResetToken
     from .qr_login import QRLogin
 
 
@@ -67,6 +68,9 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     )
     qr_logins: Mapped[list["QRLogin"]] = relationship(
         "QRLogin", back_populates="user", cascade="all, delete-orphan"
+    )
+    password_reset_tokens: Mapped[list["PasswordResetToken"]] = relationship(
+        "PasswordResetToken", back_populates="user", cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:

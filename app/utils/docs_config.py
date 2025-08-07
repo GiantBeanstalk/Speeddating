@@ -47,8 +47,16 @@ class DocsConfig:
         return templates_dir / template_name
 
 
-# Global docs configuration instance
-docs_config = DocsConfig()
+# Global docs configuration instance (lazy initialization)
+_docs_config = None
+
+
+def get_docs_config() -> DocsConfig:
+    """Get the global docs configuration instance (lazy initialization)."""
+    global _docs_config
+    if _docs_config is None:
+        _docs_config = DocsConfig()
+    return _docs_config
 
 
 def create_documentation_file(
@@ -71,7 +79,7 @@ def create_documentation_file(
     if not filename.endswith(".md"):
         filename += ".md"
 
-    file_path = docs_config.get_docs_path(filename)
+    file_path = get_docs_config().get_docs_path(filename)
 
     if file_path.exists() and not overwrite:
         raise FileExistsError(f"Documentation file {filename} already exists")

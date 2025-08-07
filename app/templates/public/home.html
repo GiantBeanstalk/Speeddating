@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Speed Dating - Find Your Perfect Match{% endblock %}
+
+{% block content %}
+<!-- Super User Setup Notice (only shown when available) -->
+{% if super_user_setup_available %}
+<div class="bg-red-900/20 border-l-4 border-red-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <svg class="w-6 h-6 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+                <div>
+                    <h3 class="text-lg font-medium text-red-200">Administrator Setup Required</h3>
+                    <p class="text-sm text-red-300">Create the first administrator account using the secret key.</p>
+                </div>
+            </div>
+            <a href="/setup/super-user" class="btn btn-primary">
+                Setup Admin Account
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Hero Section -->
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div class="text-center">
+            <!-- Logo -->
+            <h1 class="text-6xl md:text-8xl font-bold text-gradient mb-6">
+                SpeedDate
+            </h1>
+            
+            <!-- Tagline -->
+            <p class="text-xl md:text-2xl text-slate-300 mb-8 max-w-3xl mx-auto">
+                Find meaningful connections through organized speed dating events. 
+                Meet like-minded people in a fun, structured environment.
+            </p>
+            
+            <!-- CTA Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+                {% if not request.user or not request.user.is_authenticated %}
+                <a href="/auth/login" class="btn btn-primary btn-lg">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                    </svg>
+                    Sign In
+                </a>
+                <a href="/auth/register" class="btn btn-outline btn-lg">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                    </svg>
+                    Join Now
+                </a>
+                {% else %}
+                <a href="/dashboard" class="btn btn-primary btn-lg">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    Go to Dashboard
+                </a>
+                <a href="/events" class="btn btn-outline btn-lg">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Browse Events
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Features Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <!-- Quick & Easy -->
+            <div class="text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700">
+                <div class="w-12 h-12 mx-auto mb-4 p-3 bg-red-900/50 rounded-full">
+                    <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Quick & Easy</h3>
+                <p class="text-slate-400">
+                    Fast QR code check-in and streamlined matching process. 
+                    No complicated apps or lengthy setup required.
+                </p>
+            </div>
+            
+            <!-- Smart Matching -->
+            <div class="text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700">
+                <div class="w-12 h-12 mx-auto mb-4 p-3 bg-red-900/50 rounded-full">
+                    <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Smart Matching</h3>
+                <p class="text-slate-400">
+                    Category-aware matching algorithm ensures you meet 
+                    compatible people based on your preferences and interests.
+                </p>
+            </div>
+            
+            <!-- Real-time Results -->
+            <div class="text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700">
+                <div class="w-12 h-12 mx-auto mb-4 p-3 bg-green-900/50 rounded-full">
+                    <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Real-time Results</h3>
+                <p class="text-slate-400">
+                    Get instant match results and connect with mutual 
+                    matches immediately after the event ends.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upcoming Events Section -->
+{% if upcoming_events %}
+<section class="py-20 bg-slate-800/50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-white mb-4">Upcoming Events</h2>
+            <p class="text-xl text-slate-400">Join our next speed dating events</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {% for event in upcoming_events %}
+            <div class="card hover:shadow-red transition-all duration-300">
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-white mb-2">{{ event.name }}</h3>
+                    <div class="flex items-center text-sm text-slate-400 mb-2">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        {{ event.start_time.strftime('%B %d, %Y at %I:%M %p') }}
+                    </div>
+                    {% if event.location %}
+                    <div class="flex items-center text-sm text-slate-400 mb-4">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        {{ event.location }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="flex justify-between items-center">
+                    <div class="text-sm text-slate-400">
+                        <span class="badge badge-primary">{{ event.attendee_count or 0 }} registered</span>
+                    </div>
+                    <a href="/events/{{ event.id }}" class="btn btn-primary btn-sm">
+                        Learn More
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-12">
+            <a href="/events" class="btn btn-secondary">
+                View All Events →
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- How It Works Section -->
+<section class="py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-white mb-4">How It Works</h2>
+            <p class="text-xl text-slate-400">Simple steps to find your perfect match</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <!-- Step 1 -->
+            <div class="text-center">
+                <div class="w-16 h-16 mx-auto mb-4 bg-gradient-red rounded-full flex items-center justify-center">
+                    <span class="text-2xl font-bold text-white">1</span>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Register</h3>
+                <p class="text-slate-400">
+                    Sign up for an account and register for upcoming events
+                </p>
+            </div>
+            
+            <!-- Step 2 -->
+            <div class="text-center">
+                <div class="w-16 h-16 mx-auto mb-4 bg-gradient-red rounded-full flex items-center justify-center">
+                    <span class="text-2xl font-bold text-white">2</span>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Attend</h3>
+                <p class="text-slate-400">
+                    Show up to the event and check in with your QR code
+                </p>
+            </div>
+            
+            <!-- Step 3 -->
+            <div class="text-center">
+                <div class="w-16 h-16 mx-auto mb-4 bg-gradient-red rounded-full flex items-center justify-center">
+                    <span class="text-2xl font-bold text-white">3</span>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Meet</h3>
+                <p class="text-slate-400">
+                    Have short conversations with multiple potential matches
+                </p>
+            </div>
+            
+            <!-- Step 4 -->
+            <div class="text-center">
+                <div class="w-16 h-16 mx-auto mb-4 bg-gradient-red rounded-full flex items-center justify-center">
+                    <span class="text-2xl font-bold text-white">4</span>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Connect</h3>
+                <p class="text-slate-400">
+                    Get mutual match results and start meaningful conversations
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-20 bg-gradient-red">
+    <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+        <h2 class="text-3xl font-bold text-white mb-4">
+            Ready to Find Your Match?
+        </h2>
+        <p class="text-xl text-red-100 mb-8">
+            Join hundreds of singles who have found meaningful connections through our events.
+        </p>
+        {% if not request.user or not request.user.is_authenticated %}
+        <a href="/auth/register" class="btn bg-white text-red-600 hover:bg-red-50 btn-lg">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+            </svg>
+            Get Started Today
+        </a>
+        {% else %}
+        <a href="/events" class="btn bg-white text-red-600 hover:bg-red-50 btn-lg">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            Browse Events
+        </a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

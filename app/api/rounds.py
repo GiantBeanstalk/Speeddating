@@ -6,7 +6,7 @@ Handles round creation, timing, and real-time management for speed dating events
 
 import asyncio
 import uuid
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
@@ -85,7 +85,7 @@ active_timers: dict[uuid.UUID, dict[str, Any]] = {}
 
 def calculate_round_times(round_obj: Round) -> dict[str, int | None]:
     """Calculate time remaining and other timing information for a round."""
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
 
     if round_obj.status == RoundStatus.PENDING:
         return {
@@ -167,7 +167,7 @@ async def create_bulk_rounds(
 
     # Create rounds
     rounds = []
-    current_start = round_data.start_time or datetime.utcnow()
+    current_start = round_data.start_time or datetime.now(UTC)
 
     for round_num in range(1, round_data.total_rounds + 1):
         scheduled_start = current_start + timedelta(

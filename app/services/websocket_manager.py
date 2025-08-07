@@ -8,7 +8,7 @@ and event notifications.
 import asyncio
 import json
 import uuid
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from fastapi import WebSocket
@@ -62,7 +62,7 @@ class ConnectionManager:
             "is_organizer": user.is_organizer,
             "room_type": room_type,
             "room_id": room_id,
-            "connected_at": datetime.utcnow(),
+            "connected_at": datetime.now(UTC),
         }
 
         # Subscribe to appropriate room
@@ -213,7 +213,7 @@ class RoundTimerManager:
             "round_id": round_id,
             "duration_seconds": duration_minutes * 60,
             "break_seconds": break_minutes * 60,
-            "started_at": datetime.utcnow(),
+            "started_at": datetime.now(UTC),
             "status": "active",
             "phase": "round",  # "round" or "break"
         }
@@ -254,7 +254,7 @@ class RoundTimerManager:
                     return
 
                 # Calculate actual remaining time based on start time
-                elapsed = (datetime.utcnow() - started_at).total_seconds()
+                elapsed = (datetime.now(UTC) - started_at).total_seconds()
                 actual_remaining = max(0, duration_seconds - elapsed)
 
                 # Broadcast timer update
@@ -323,7 +323,7 @@ class RoundTimerManager:
             # Break phase (if configured)
             if break_seconds > 0:
                 self.timer_data[round_id]["phase"] = "break"
-                break_start = datetime.utcnow()
+                break_start = datetime.now(UTC)
 
                 await self.connection_manager.broadcast_to_round_timer(
                     {
@@ -340,7 +340,7 @@ class RoundTimerManager:
                         return
 
                     # Calculate actual remaining break time
-                    break_elapsed = (datetime.utcnow() - break_start).total_seconds()
+                    break_elapsed = (datetime.now(UTC) - break_start).total_seconds()
                     actual_remaining = max(0, break_seconds - break_elapsed)
 
                     # Broadcast break timer update
@@ -427,7 +427,7 @@ class RoundTimerManager:
 
         timer_data = self.timer_data[round_id]
         started_at = timer_data["started_at"]
-        elapsed = (datetime.utcnow() - started_at).total_seconds()
+        elapsed = (datetime.now(UTC) - started_at).total_seconds()
 
         if timer_data["phase"] == "round":
             remaining = max(0, timer_data["duration_seconds"] - elapsed)
@@ -473,7 +473,7 @@ class EventCountdownManager:
         await self.stop_event_countdown(event_id)
 
         # Store countdown data
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         target_time = now + timedelta(minutes=duration_minutes)
 
         self.countdown_data[event_id] = {
@@ -547,7 +547,7 @@ class EventCountdownManager:
                 if event_id not in self.countdown_data:  # Countdown was stopped
                     return
 
-                now = datetime.utcnow()
+                now = datetime.now(UTC)
                 remaining_seconds = max(0, int((target_time - now).total_seconds()))
                 elapsed_seconds = int((now - started_at).total_seconds())
                 percentage = (
@@ -704,7 +704,7 @@ class EventCountdownManager:
             return None
 
         countdown_data = self.countdown_data[event_id]
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         target_time = countdown_data["target_time"]
         started_at = countdown_data["started_at"]
 

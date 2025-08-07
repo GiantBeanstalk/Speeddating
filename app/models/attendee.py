@@ -3,7 +3,7 @@ Attendee models for event participation and matching preferences.
 """
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 
 from sqlalchemy import (
@@ -161,7 +161,7 @@ class Attendee(Base):
         import secrets
 
         self.qr_token = secrets.token_urlsafe(32)
-        self.qr_generated_at = datetime.utcnow()
+        self.qr_generated_at = datetime.now(UTC)
         return self.qr_token
 
     def generate_profile_qr_token(self) -> str:

@@ -1,0 +1,296 @@
+/* FetLife-inspired Speed Dating App Styles */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Tailwind CSS base styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS Variables for FetLife-inspired red theme */
+:root {
+  --color-primary: #DC2626;
+  --color-primary-dark: #B91C1C;
+  --color-primary-light: #EF4444;
+  --color-accent: #F87171;
+  --color-background: #0F172A;
+  --color-surface: #1E293B;
+  --color-surface-light: #334155;
+  --color-text: #F8FAFC;
+  --color-text-muted: #E2E8F0;
+  --color-text-dark: #94A3B8;
+  --color-border: #475569;
+  --color-border-light: #64748B;
+}
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+/* Custom component classes */
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 inline-flex items-center justify-center;
+  }
+  
+  .btn-primary {
+    @apply bg-red-600 hover:bg-red-700 text-white;
+    background: linear-gradient(135deg, #DC2626, #B91C1C);
+  }
+  
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #B91C1C, #991B1B);
+    transform: translateY(-1px);
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-700 hover:bg-gray-600 text-gray-100 border border-gray-600;
+  }
+  
+  .btn-outline {
+    @apply border border-red-600 text-red-500 hover:bg-red-600 hover:text-white;
+  }
+  
+  .btn-danger {
+    @apply bg-red-900 hover:bg-red-800 text-red-100;
+  }
+  
+  .card {
+    @apply bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-lg;
+  }
+  
+  .card-header {
+    @apply border-b border-slate-700 pb-4 mb-4;
+  }
+  
+  .form-input {
+    @apply w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400;
+    @apply focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500;
+  }
+  
+  .form-label {
+    @apply block text-sm font-medium text-slate-300 mb-2;
+  }
+  
+  .form-group {
+    @apply mb-6;
+  }
+  
+  .alert {
+    @apply p-4 rounded-lg border;
+  }
+  
+  .alert-success {
+    @apply bg-green-900 border-green-700 text-green-100;
+  }
+  
+  .alert-error {
+    @apply bg-red-900 border-red-700 text-red-100;
+  }
+  
+  .alert-warning {
+    @apply bg-yellow-900 border-yellow-700 text-yellow-100;
+  }
+  
+  .alert-info {
+    @apply bg-blue-900 border-blue-700 text-blue-100;
+  }
+  
+  .nav-link {
+    @apply px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors duration-200;
+  }
+  
+  .nav-link.active {
+    @apply text-white bg-red-600;
+  }
+  
+  .table {
+    @apply w-full border-collapse;
+  }
+  
+  .table th {
+    @apply px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider border-b border-slate-700;
+  }
+  
+  .table td {
+    @apply px-4 py-3 text-sm text-slate-300 border-b border-slate-800;
+  }
+  
+  .table tr:hover {
+    @apply bg-slate-800;
+  }
+  
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  
+  .badge-primary {
+    @apply bg-red-900 text-red-200;
+  }
+  
+  .badge-success {
+    @apply bg-green-900 text-green-200;
+  }
+  
+  .badge-warning {
+    @apply bg-yellow-900 text-yellow-200;
+  }
+  
+  .badge-info {
+    @apply bg-blue-900 text-blue-200;
+  }
+  
+  .badge-gray {
+    @apply bg-slate-700 text-slate-300;
+  }
+  
+  .progress-bar {
+    @apply w-full bg-slate-700 rounded-full h-2;
+  }
+  
+  .progress-fill {
+    @apply bg-red-600 h-2 rounded-full transition-all duration-300;
+  }
+  
+  .modal-backdrop {
+    @apply fixed inset-0 bg-black bg-opacity-50 z-40;
+  }
+  
+  .modal {
+    @apply fixed inset-0 z-50 overflow-y-auto;
+  }
+  
+  .modal-content {
+    @apply bg-slate-800 rounded-xl border border-slate-700 shadow-xl max-w-lg mx-auto mt-20;
+  }
+}
+
+/* Custom utilities */
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(135deg, #DC2626, #EF4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .bg-gradient-red {
+    background: linear-gradient(135deg, #DC2626, #B91C1C);
+  }
+  
+  .shadow-red {
+    box-shadow: 0 4px 14px 0 rgba(220, 38, 38, 0.25);
+  }
+  
+  .border-gradient {
+    border: 1px solid transparent;
+    background: linear-gradient(var(--color-surface), var(--color-surface)) padding-box,
+                linear-gradient(135deg, #DC2626, #EF4444) border-box;
+  }
+}
+
+/* Timer specific styles */
+.timer-display {
+  font-size: 3rem;
+  font-weight: bold;
+  color: var(--color-text);
+  text-align: center;
+  margin: 20px 0;
+}
+
+.timer-display.warning {
+  color: #EF4444;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+.timer-container {
+  background: var(--color-surface);
+  border-radius: 1rem;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border);
+}
+
+/* WebSocket connection status */
+.connection-status {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+}
+
+.connection-status.connected {
+  @apply bg-green-900 text-green-200 border-green-700;
+}
+
+.connection-status.disconnected {
+  @apply bg-red-900 text-red-200 border-red-700;
+}
+
+.connection-status.connecting {
+  @apply bg-yellow-900 text-yellow-200 border-yellow-700;
+}
+
+/* Loading spinner */
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--color-border);
+  border-top: 2px solid var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* htmx indicators */
+.htmx-indicator {
+  opacity: 0;
+  transition: opacity 200ms ease-in;
+}
+
+.htmx-request .htmx-indicator {
+  opacity: 1;
+}
+
+.htmx-request.htmx-indicator {
+  opacity: 1;
+}
+
+/* Focus styles for accessibility */
+*:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .timer-display {
+    font-size: 2rem;
+  }
+  
+  .card {
+    @apply p-4;
+  }
+  
+  .btn {
+    @apply w-full justify-center;
+  }
+}

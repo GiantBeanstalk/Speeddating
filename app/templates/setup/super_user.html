@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+
+{% block title %}Super User Setup - Speed Dating{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <!-- Logo and Header -->
+        <div class="text-center">
+            <div class="flex justify-center mb-4">
+                <div class="p-4 bg-red-900/50 rounded-full">
+                    <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                </div>
+            </div>
+            <h1 class="text-4xl font-bold text-gradient mb-2">Super User Setup</h1>
+            <h2 class="text-xl text-slate-300">Create Administrator Account</h2>
+            <p class="text-sm text-slate-400 mt-2">
+                This is a one-time setup. You'll need the secret key generated when the application was first started.
+            </p>
+        </div>
+
+        <!-- Setup Form -->
+        <div class="card">
+            <div class="bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-4 mb-6">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-yellow-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.98-.833-2.75 0L3.064 16.5C2.294 18.333 3.256 20 4.796 20z"></path>
+                    </svg>
+                    <div>
+                        <h3 class="text-sm font-medium text-yellow-300 mb-1">Security Notice</h3>
+                        <p class="text-xs text-yellow-200">
+                            • This form will be permanently disabled after creating the super user<br>
+                            • The secret key was displayed in the application logs during first startup<br>
+                            • This account will have full administrative privileges
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <form id="super-user-form" 
+                  hx-post="/setup/super-user" 
+                  hx-target="#result-container"
+                  hx-swap="innerHTML"
+                  class="space-y-6">
+                
+                <!-- CSRF Protection -->
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <!-- Secret Key -->
+                <div class="form-group">
+                    <label for="secret_key" class="form-label required">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m0 0a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9a2 2 0 012-2m0 0V7a2 2 0 012-2m3 0a2 2 0 00-2-2m0 0a2 2 0 00-2 2"></path>
+                        </svg>
+                        Secret Key
+                    </label>
+                    <input 
+                        id="secret_key"
+                        name="secret_key" 
+                        type="password" 
+                        required 
+                        class="form-input"
+                        placeholder="Enter the secret key from application startup"
+                        autocomplete="new-password"
+                    >
+                    <p class="form-help">
+                        The secret key was shown in the console when the application first started.
+                    </p>
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="email" class="form-label required">
+                        Email Address
+                    </label>
+                    <input 
+                        id="email"
+                        name="email" 
+                        type="email" 
+                        required 
+                        class="form-input"
+                        placeholder="admin@example.com"
+                        autocomplete="email"
+                    >
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password" class="form-label required">
+                        Password
+                    </label>
+                    <input 
+                        id="password"
+                        name="password" 
+                        type="password" 
+                        required 
+                        minlength="8"
+                        class="form-input"
+                        placeholder="Create a strong password"
+                        autocomplete="new-password"
+                    >
+                    <p class="form-help">
+                        Minimum 8 characters. Use a combination of letters, numbers, and symbols.
+                    </p>
+                </div>
+
+                <!-- Personal Information -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label for="first_name" class="form-label required">
+                            First Name
+                        </label>
+                        <input 
+                            id="first_name"
+                            name="first_name" 
+                            type="text" 
+                            required 
+                            maxlength="50"
+                            class="form-input"
+                            placeholder="John"
+                            autocomplete="given-name"
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label for="last_name" class="form-label required">
+                            Last Name
+                        </label>
+                        <input 
+                            id="last_name"
+                            name="last_name" 
+                            type="text" 
+                            required 
+                            maxlength="50"
+                            class="form-input"
+                            placeholder="Doe"
+                            autocomplete="family-name"
+                        >
+                    </div>
+                </div>
+
+                <!-- Display Name -->
+                <div class="form-group">
+                    <label for="display_name" class="form-label required">
+                        Display Name
+                    </label>
+                    <input 
+                        id="display_name"
+                        name="display_name" 
+                        type="text" 
+                        required 
+                        maxlength="100"
+                        class="form-input"
+                        placeholder="Administrator"
+                        autocomplete="nickname"
+                    >
+                    <p class="form-help">
+                        This name will be displayed throughout the application.
+                    </p>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-group">
+                    <button 
+                        type="submit" 
+                        class="btn btn-primary w-full">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                        </svg>
+                        Create Super User Account
+                    </button>
+                </div>
+            </form>
+
+            <!-- Result Container -->
+            <div id="result-container" class="mt-6"></div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-sm text-slate-400">
+            <p>After creating the super user account, you can access the admin dashboard at 
+                <a href="/admin/dashboard" class="text-red-400 hover:text-red-300">/admin/dashboard</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('super-user-form');
+    const resultContainer = document.getElementById('result-container');
+    
+    // Auto-fill display name from first and last name
+    const firstNameInput = document.getElementById('first_name');
+    const lastNameInput = document.getElementById('last_name');
+    const displayNameInput = document.getElementById('display_name');
+    
+    function updateDisplayName() {
+        const firstName = firstNameInput.value.trim();
+        const lastName = lastNameInput.value.trim();
+        if (firstName && lastName && !displayNameInput.value.trim()) {
+            displayNameInput.value = `${firstName} ${lastName}`;
+        }
+    }
+    
+    firstNameInput.addEventListener('blur', updateDisplayName);
+    lastNameInput.addEventListener('blur', updateDisplayName);
+    
+    // Handle form submission response
+    document.body.addEventListener('htmx:afterRequest', function(event) {
+        if (event.target.id === 'super-user-form') {
+            const response = event.detail.xhr.response;
+            
+            try {
+                const data = JSON.parse(response);
+                
+                if (event.detail.successful && data.success) {
+                    // Success
+                    resultContainer.innerHTML = `
+                        <div class="bg-green-900/20 border border-green-600/30 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div>
+                                    <h3 class="text-sm font-medium text-green-300">${data.message}</h3>
+                                    <p class="text-xs text-green-200 mt-1">
+                                        You can now <a href="/auth/login" class="underline hover:text-green-100">sign in</a> with your new account.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Disable the form
+                    form.style.display = 'none';
+                    
+                    // Redirect after a delay
+                    setTimeout(() => {
+                        window.location.href = '/auth/login';
+                    }, 3000);
+                    
+                } else {
+                    // Error from API
+                    const message = data.message || data.detail || 'An error occurred';
+                    resultContainer.innerHTML = `
+                        <div class="bg-red-900/20 border border-red-600/30 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div>
+                                    <h3 class="text-sm font-medium text-red-300">Setup Failed</h3>
+                                    <p class="text-xs text-red-200 mt-1">${message}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                // Parse error or other issue
+                resultContainer.innerHTML = `
+                    <div class="bg-red-900/20 border border-red-600/30 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div>
+                                <h3 class="text-sm font-medium text-red-300">Setup Failed</h3>
+                                <p class="text-xs text-red-200 mt-1">An unexpected error occurred. Please try again.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    });
+    
+    // Handle loading state
+    document.body.addEventListener('htmx:beforeRequest', function(event) {
+        if (event.target.id === 'super-user-form') {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <svg class="animate-spin w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Creating Account...
+            `;
+        }
+    });
+    
+    document.body.addEventListener('htmx:afterRequest', function(event) {
+        if (event.target.id === 'super-user-form') {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                </svg>
+                Create Super User Account
+            `;
+        }
+    });
+});
+</script>
+{% endblock %}

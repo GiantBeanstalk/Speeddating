@@ -8,7 +8,7 @@ from .docs_config import (
     create_architecture_docs,
     create_documentation_file,
     create_feature_docs,
-    docs_config,
+    get_docs_config,
     update_documentation_file,
 )
 from .validators import (
@@ -28,7 +28,7 @@ __all__ = [
     "BioContentFilter",
     "ContentFilterResult",
     "bio_filter",
-    "docs_config",
+    "get_docs_config",
     "create_documentation_file",
     "update_documentation_file",
     "create_api_docs",

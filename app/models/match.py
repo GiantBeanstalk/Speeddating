@@ -3,7 +3,7 @@ Match model for speed dating matches between attendees.
 """
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Optional
 
@@ -144,7 +144,7 @@ class Match(Base):
         Returns:
             True if response was set successfully, False otherwise
         """
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
 
         if attendee_id == self.attendee1_id:
             self.attendee1_response = response

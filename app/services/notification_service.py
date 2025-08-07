@@ -5,7 +5,7 @@ Handles various types of notifications and broadcasting.
 """
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -55,7 +55,7 @@ class NotificationService:
             "round_number": round_obj.round_number,
             "round_name": round_obj.name,
             "event_id": str(round_obj.event_id),
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         if additional_data:
@@ -127,7 +127,7 @@ class NotificationService:
             "round_id": str(match_obj.round_id) if match_obj.round_id else None,
             "round_number": match_obj.round.round_number if match_obj.round else None,
             "table_number": match_obj.table_number,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         if notification_type == NotificationType.MATCH_CREATED:
@@ -204,7 +204,7 @@ class NotificationService:
             "event_id": str(event.id),
             "title": title or "Event Update",
             "message": message_text,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         if notification_type == NotificationType.EVENT_STATUS_CHANGE:
@@ -228,7 +228,7 @@ class NotificationService:
             "type": notification_type.value,
             "title": title,
             "message": message_text,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         if additional_data:
@@ -312,7 +312,7 @@ class NotificationService:
             "message": message_text,
             "priority": priority,
             "expires_at": expires_at.isoformat() if expires_at else None,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         await connection_manager.broadcast_to_event(message, event_id)
@@ -357,7 +357,7 @@ class NotificationService:
             "message": message_text,
             "seconds_remaining": seconds_remaining,
             "warning_type": warning_type,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         await connection_manager.broadcast_to_event(message, event_id)

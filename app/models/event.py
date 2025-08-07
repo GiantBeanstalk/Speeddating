@@ -3,7 +3,7 @@ Event model for speed dating events.
 """
 
 import uuid
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, func
@@ -126,7 +126,7 @@ class Event(Base):
             return False
 
         if self.registration_deadline:
-            return datetime.utcnow() < self.registration_deadline
+            return datetime.now(UTC) < self.registration_deadline
 
         return not self.is_full
 
@@ -152,7 +152,7 @@ class Event(Base):
 
         if (
             self.registration_deadline
-            and datetime.utcnow() > self.registration_deadline
+            and datetime.now(UTC) > self.registration_deadline
         ):
             return False, "Registration deadline has passed"
 
@@ -171,7 +171,7 @@ class Event(Base):
         if duration_minutes <= 0 or duration_minutes > 60:
             raise ValueError("Countdown duration must be between 1 and 60 minutes")
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         self.countdown_active = True
         self.countdown_start_time = now
         self.countdown_target_time = now + timedelta(minutes=duration_minutes)
@@ -222,7 +222,7 @@ class Event(Base):
                 "target_time": None,
             }
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
 
         # If countdown has passed, mark as inactive
         if now >= self.countdown_target_time:

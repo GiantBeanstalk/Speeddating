@@ -6,7 +6,7 @@ Handles QR code generation, validation, and PDF badge creation for attendees.
 
 import hashlib
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from io import BytesIO
 from typing import Any
 
@@ -71,7 +71,7 @@ class QRCodeService:
                 QRLogin.attendee_id == attendee_id,
                 QRLogin.is_active,
                 not QRLogin.is_revoked,
-                QRLogin.expires_at > datetime.utcnow(),
+                QRLogin.expires_at > datetime.now(UTC),
             )
         )
         return result.scalar_one_or_none()
@@ -203,7 +203,7 @@ class QRCodeService:
             }
 
         # Calculate statistics
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         active_tokens = sum(1 for qr in qr_logins if qr.is_valid)
         used_tokens = sum(1 for qr in qr_logins if qr.usage_count > 0)
         expired_tokens = sum(
@@ -228,7 +228,7 @@ class QRCodeService:
 
         # Build the query
         query = update(QRLogin).where(
-            QRLogin.expires_at < datetime.utcnow(), not QRLogin.is_revoked
+            QRLogin.expires_at < datetime.now(UTC), not QRLogin.is_revoked
         )
 
         if event_id:
@@ -238,7 +238,7 @@ class QRCodeService:
         result = await self.session.execute(
             query.values(
                 is_revoked=True,
-                revoked_at=datetime.utcnow(),
+                revoked_at=datetime.now(UTC),
                 revoked_reason="Automatically expired",
             )
         )

@@ -13,14 +13,23 @@ PORT = 8000
 ALLOWED_ORIGINS = ["http://localhost:3000", "http://localhost:8000"]
 
 # QR Code settings
-qr_code_base_url = "http://localhost:8000"
+QR_CODE_BASE_URL = "http://localhost:8000"
 
 # PDF Badge settings
-pdf_badges_per_page = 35
+PDF_BADGES_PER_PAGE = 35
 
 # Documentation settings
-docs_directory = "docs"
-auto_generate_docs = true
+DOCS_DIRECTORY = "docs"
+AUTO_GENERATE_DOCS = true
+
+# Email/SMTP settings (optional - for password reset emails)
+# Uncomment and configure for email functionality
+# SMTP_HOST = "smtp.gmail.com"
+# SMTP_PORT = 587
+# SMTP_USERNAME = "your-email@gmail.com"
+# SMTP_PASSWORD = "your-app-password"
+# SMTP_TLS = true
+# SMTP_FROM_EMAIL = "noreply@yourdomain.com"
 
 [development]
 DEBUG = true

@@ -8,7 +8,7 @@ import asyncio
 import json
 import logging
 import uuid
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from fastapi import Depends, WebSocket, WebSocketDisconnect
@@ -159,14 +159,14 @@ class RoundTimerHandler:
                 "type": "timer_state_batch",
                 "event_id": str(event_id),
                 "rounds": timer_states,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
             connection_id,
         )
 
     async def calculate_timer_state(self, round_obj: Round) -> dict[str, Any]:
         """Calculate current timer state for a round."""
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
 
         timer_state = {
             "round_id": str(round_obj.id),
@@ -260,7 +260,7 @@ class RoundTimerHandler:
             {
                 "type": "timer_update",
                 "round": timer_state,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
             connection_id,
         )
@@ -286,7 +286,7 @@ class RoundTimerHandler:
             {
                 "type": message_type,
                 "round": timer_state,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
             event_id,
         )
@@ -359,7 +359,7 @@ class RoundTimerHandler:
                             "round_id": str(round_id),
                             "seconds_remaining": remaining,
                             "message": f"{remaining} seconds remaining in round",
-                            "timestamp": datetime.utcnow().isoformat(),
+                            "timestamp": datetime.now(UTC).isoformat(),
                         },
                         event_id,
                     )
@@ -376,7 +376,7 @@ class RoundTimerHandler:
                         "round_id": str(round_id),
                         "break_duration_minutes": round_obj.break_after_minutes,
                         "message": f"Break started for {round_obj.break_after_minutes} minutes",
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     },
                     event_id,
                 )
@@ -398,7 +398,7 @@ class RoundTimerHandler:
                                 "round_id": str(round_id),
                                 "seconds_remaining": remaining,
                                 "message": f"Break ends in {remaining} seconds",
-                                "timestamp": datetime.utcnow().isoformat(),
+                                "timestamp": datetime.now(UTC).isoformat(),
                             },
                             event_id,
                         )
@@ -412,7 +412,7 @@ class RoundTimerHandler:
                     "type": "round_ended",
                     "round_id": str(round_id),
                     "message": f"Round {round_obj.round_number} has ended",
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 },
                 event_id,
             )

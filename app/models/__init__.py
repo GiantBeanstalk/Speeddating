@@ -5,6 +5,7 @@ Database models package.
 from .attendee import Attendee, AttendeeCategory, AttendeePreference
 from .event import Event, EventStatus
 from .match import Match, MatchResponse
+from .password_reset import PasswordResetToken
 from .qr_login import QRLogin
 from .round import Round, RoundStatus
 from .user import OAuthAccount, User
@@ -21,5 +22,6 @@ __all__ = [
     "RoundStatus",
     "Match",
     "MatchResponse",
+    "PasswordResetToken",
     "QRLogin",
 ]

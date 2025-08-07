@@ -5,7 +5,7 @@ QR Login model for secure QR code authentication.
 import hashlib
 import secrets
 import uuid
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any, Optional
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, func
@@ -109,7 +109,7 @@ class QRLogin(Base):
             event_id=event_id,
             attendee_id=attendee_id,
             token_type=token_type,
-            expires_at=datetime.utcnow() + timedelta(hours=expire_hours),
+            expires_at=datetime.now(UTC) + timedelta(hours=expire_hours),
         )
 
         qr_login.generate_token()
@@ -133,7 +133,7 @@ class QRLogin(Base):
     @property
     def is_valid(self) -> bool:
         """Check if the token is currently valid."""
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
 
         return (
             self.is_active
@@ -148,7 +148,7 @@ class QRLogin(Base):
         if not self.expires_at:
             return None
 
-        delta = self.expires_at - datetime.utcnow()
+        delta = self.expires_at - datetime.now(UTC)
         return max(0, int(delta.total_seconds()))
 
     def use_token(
@@ -163,7 +163,7 @@ class QRLogin(Base):
         if not self.is_valid:
             return False
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
 
         # Update usage tracking
         if self.usage_count == 0:
@@ -195,7 +195,7 @@ class QRLogin(Base):
         """Revoke the token."""
         self.is_revoked = True
         self.is_active = False
-        self.revoked_at = datetime.utcnow()
+        self.revoked_at = datetime.now(UTC)
         self.revoked_reason = reason
 
     def extend_expiry(self, additional_hours: int = 24) -> None:
@@ -203,7 +203,7 @@ class QRLogin(Base):
         if self.expires_at:
             self.expires_at += timedelta(hours=additional_hours)
         else:
-            self.expires_at = datetime.utcnow() + timedelta(hours=additional_hours)
+            self.expires_at = datetime.now(UTC) + timedelta(hours=additional_hours)
 
     def _add_usage_event(self, event_data: dict[str, Any]) -> None:
         """Add a usage event to the history."""

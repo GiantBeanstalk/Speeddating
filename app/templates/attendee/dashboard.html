@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Speed Dating{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-white">Welcome back!</h1>
+        <p class="mt-2 text-slate-400">Your speed dating journey continues</p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Events Registered -->
+        <div class="card">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-red-900/50">
+                    <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-slate-400">Events Registered</p>
+                    <p class="text-2xl font-semibold text-white">{{ user_stats.events_registered or 0 }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Matches -->
+        <div class="card">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-red-900/50">
+                    <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-slate-400">Total Matches</p>
+                    <p class="text-2xl font-semibold text-white">{{ user_stats.total_matches or 0 }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mutual Matches -->
+        <div class="card">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-900/50">
+                    <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-slate-400">Mutual Matches</p>
+                    <p class="text-2xl font-semibold text-white">{{ user_stats.mutual_matches or 0 }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- My Events -->
+        <div class="lg:col-span-2">
+            <div class="card">
+                <div class="card-header">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xl font-semibold text-white">My Events</h2>
+                        <a href="/events" class="text-red-400 hover:text-red-300 text-sm">
+                            Browse Events →
+                        </a>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    {% for event in my_events %}
+                    <div class="p-4 bg-slate-700/50 rounded-lg">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h3 class="font-medium text-white">{{ event.name }}</h3>
+                                <p class="text-sm text-slate-400 mt-1">
+                                    {{ event.start_time.strftime('%B %d, %Y at %I:%M %p') if event.start_time else 'Date TBA' }}
+                                </p>
+                                <p class="text-sm text-slate-300 mt-2">{{ event.location or 'Location TBA' }}</p>
+                                
+                                <!-- Registration Status -->
+                                <div class="flex items-center mt-3 space-x-4">
+                                    <span class="badge badge-{{ 'success' if event.registration_status == 'confirmed' else 'warning' if event.registration_status == 'pending' else 'gray' }}">
+                                        {{ event.registration_status.title() if event.registration_status else 'Not Registered' }}
+                                    </span>
+                                    {% if event.check_in_status %}
+                                    <span class="badge badge-info">
+                                        Checked In
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2 ml-4">
+                                {% if event.can_check_in %}
+                                <button 
+                                    hx-post="/api/attendees/{{ event.attendee_id }}/check-in"
+                                    hx-target="#flash-messages"
+                                    class="btn btn-primary btn-sm">
+                                    Check In
+                                </button>
+                                {% endif %}
+                                <a href="/events/{{ event.id }}" class="btn btn-secondary btn-sm">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Event Progress -->
+                        {% if event.status == 'active' %}
+                        <div class="mt-4 p-3 bg-slate-800 rounded-lg">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-medium text-slate-300">Event Progress</span>
+                                <span class="text-sm text-slate-400">Round {{ event.current_round or 1 }}</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ (event.current_round or 0) / (event.total_rounds or 1) * 100 }}%"></div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-8 text-slate-400">
+                        <svg class="w-12 h-12 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <p>No events registered yet</p>
+                        <a href="/events" class="text-red-400 hover:text-red-300 text-sm">
+                            Find events to join
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Profile Completion -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-lg font-medium text-white">Profile</h3>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-medium text-white">Profile Completion</p>
+                            <div class="progress-bar mt-2">
+                                <div class="progress-fill" style="width: {{ profile_completion or 0 }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="/profile" class="btn btn-secondary w-full">
+                        Update Profile
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent Matches -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-medium text-white">Recent Matches</h3>
+                        <a href="/matches" class="text-red-400 hover:text-red-300 text-sm">
+                            View All →
+                        </a>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    {% for match in recent_matches %}
+                    <div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
+                        <div>
+                            <p class="text-sm font-medium text-white">{{ match.other_person_name }}</p>
+                            <p class="text-xs text-slate-400">{{ match.event_name }}</p>
+                        </div>
+                        <div>
+                            {% if match.is_mutual %}
+                            <span class="badge badge-success">Mutual</span>
+                            {% else %}
+                            <span class="badge badge-gray">{{ match.my_response.title() }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-slate-400">
+                        <p class="text-sm">No matches yet</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-lg font-medium text-white">Quick Actions</h3>
+                </div>
+                <div class="space-y-3">
+                    <a href="/qr-code" class="block p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition-colors">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-slate-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-white">My QR Code</p>
+                                <p class="text-xs text-slate-400">Quick login & profile sharing</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="/matches/respond" class="block p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition-colors">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-slate-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-white">Respond to Matches</p>
+                                <p class="text-xs text-slate-400">Rate your recent connections</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle check-in buttons
+    document.body.addEventListener('htmx:afterRequest', function(event) {
+        if (event.detail.successful && event.target.textContent.includes('Check In')) {
+            event.target.textContent = 'Checked In';
+            event.target.disabled = true;
+            event.target.classList.remove('btn-primary');
+            event.target.classList.add('btn-success');
+        }
+    });
+});
+</script>
+{% endblock %}

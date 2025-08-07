@@ -5,7 +5,7 @@ Handles attendee registration, check-in, and management functionality.
 """
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
@@ -380,7 +380,7 @@ async def check_in_attendee(
 
     # Check in attendee
     attendee.checked_in = True
-    attendee.check_in_time = datetime.utcnow()
+    attendee.check_in_time = datetime.now(UTC)
     if check_in_data.table_number:
         attendee.table_number = check_in_data.table_number
 

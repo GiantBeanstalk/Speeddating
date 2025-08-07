@@ -1,0 +1,61 @@
+<!-- Statistics Cards Component -->
+<div id="dashboard-stats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Total Events -->
+    <div class="card">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-red-900/50">
+                <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-slate-400">Total Events</p>
+                <p class="text-2xl font-semibold text-white">{{ stats.total_events or 0 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Attendees -->
+    <div class="card">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-green-900/50">
+                <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+            </svg>
+        </div>
+        <div class="ml-4">
+            <p class="text-sm font-medium text-slate-400">Total Attendees</p>
+            <p class="text-2xl font-semibold text-white">{{ stats.total_attendees or 0 }}</p>
+        </div>
+    </div>
+</div>
+
+    <!-- Active Events -->
+    <div class="card">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-blue-900/50">
+                <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-slate-400">Active Events</p>
+                <p class="text-2xl font-semibold text-white">{{ stats.active_events or 0 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Matches -->
+    <div class="card">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-red-900/50">
+                <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+            </svg>
+        </div>
+        <div class="ml-4">
+            <p class="text-sm font-medium text-slate-400">Total Matches</p>
+            <p class="text-2xl font-semibold text-white">{{ stats.total_matches or 0 }}</p>
+        </div>
+    </div>
+</div>
