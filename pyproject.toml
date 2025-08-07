@@ -37,6 +37,18 @@ dev = [
     "bleach>=6.0.0"
 ]
 
+test = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "pytest-xdist>=3.3.0",
+    "hypothesis>=6.88.0",
+    "faker>=19.0.0",
+    "factory-boy>=3.3.0",
+    "freezegun>=1.2.0",
+    "respx>=0.20.0"
+]
+
 [tool.ruff]
 target-version = "py312"
 line-length = 88
@@ -80,3 +92,63 @@ templater = "jinja"
 indented_joins = false
 indented_using_on = true
 template_blocks_indent = false
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--cov=app",
+    "--cov-report=term-missing",
+    "--cov-report=html:htmlcov",
+    "--cov-report=xml",
+    "--cov-fail-under=80",
+    "-v",
+    "--tb=short",
+]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests", 
+    "e2e: End-to-end tests",
+    "slow: Slow running tests",
+    "hypothesis: Property-based tests with Hypothesis",
+    "faker: Tests using Faker for realistic data",
+    "security: Security-focused tests",
+    "performance: Performance tests",
+    "websocket: WebSocket tests",
+]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["app"]
+omit = [
+    "tests/*",
+    "app/static/*",
+    "app/templates/*",
+    "*/__pycache__/*",
+    "*/migrations/*",
+    "*/alembic/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.hypothesis]
+max_examples = 100
+deadline = 5000
+suppress_health_check = ["too_slow", "data_too_large"]
